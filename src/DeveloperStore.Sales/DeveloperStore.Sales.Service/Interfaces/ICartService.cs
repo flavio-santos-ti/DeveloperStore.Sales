@@ -6,4 +6,5 @@ namespace DeveloperStore.Sales.Service.Interfaces;
 public interface ICartService
 {
     Task<ApiResponseDto<CartDto>> CreateAsync(RequestCartDto dto);
+    Task<ApiResponseDto<CartDto>> UpdateAsync(int id, RequestCartDto dto);
 }
