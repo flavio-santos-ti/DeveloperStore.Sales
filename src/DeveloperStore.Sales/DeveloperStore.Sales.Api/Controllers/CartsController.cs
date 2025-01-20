@@ -37,4 +37,14 @@ public class CartsController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        var response = await _cartService.DeleteAsync(id);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }
