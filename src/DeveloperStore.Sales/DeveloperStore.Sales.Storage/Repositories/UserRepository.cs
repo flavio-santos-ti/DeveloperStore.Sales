@@ -40,4 +40,9 @@ public class UserRepository : IUserRepository
         _context.Users.Remove(user);
         await Task.CompletedTask;
     }
+
+    public IQueryable<User> GetAllQueryable()
+    {
+        return _context.Users.AsQueryable();
+    }
 }
