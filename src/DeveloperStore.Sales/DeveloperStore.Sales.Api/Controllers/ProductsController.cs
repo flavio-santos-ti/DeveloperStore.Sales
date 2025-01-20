@@ -1,11 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Product;
 using DeveloperStore.Sales.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeveloperStore.Sales.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
