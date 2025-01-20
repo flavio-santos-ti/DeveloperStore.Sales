@@ -84,5 +84,4 @@ public class ProductsController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
-
 }
