@@ -55,4 +55,38 @@ public class UserService : IUserService
             return ApiResponseDto<UserDto>.AsInternalServerError($"Erro interno: {ex.Message}");
         }
     }
+
+    public async Task<ApiResponseDto<UserDto>> UpdateAsync(int id, RequestUserDto dto)
+    {
+        if (dto == null)
+            return ApiResponseDto<UserDto>.AsBadRequest("Os dados do usuário não podem ser nulos.");
+
+        var validationResult = await _validator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return validationResult.ToApiResponse<UserDto>();
+
+        var existingUser = await _userRepository.GetByIdAsync(id);
+        if (existingUser == null)
+            return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            if (!string.IsNullOrEmpty(dto.Password))
+                existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+            _mapper.Map(dto, existingUser);
+
+            await _userRepository.UpdateAsync(existingUser);
+            await _unitOfWork.CommitAsync();
+
+            var updatedUserDto = _mapper.Map<UserDto>(existingUser);
+            return ApiResponseDto<UserDto>.AsSuccess(updatedUserDto);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ApiResponseDto<UserDto>.AsInternalServerError($"Erro interno: {ex.Message}");
+        }
+    }
 }

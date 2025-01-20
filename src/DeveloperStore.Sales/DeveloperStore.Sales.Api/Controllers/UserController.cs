@@ -25,4 +25,15 @@ public class UserController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAsync(int id, [FromBody] RequestUserDto dto)
+    {
+        var response = await _userService.UpdateAsync(id, dto);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }
