@@ -9,13 +9,15 @@ public class UnitOfWork : IUnitOfWork
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _transaction;
     private IProductRepository? _productRepository;
+    private IUserRepository? _userRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
-        _context = context;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
     public IProductRepository ProductRepository => _productRepository ??= new ProductRepository(_context);
+    public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
 
     public async Task BeginTransactionAsync()
     {
