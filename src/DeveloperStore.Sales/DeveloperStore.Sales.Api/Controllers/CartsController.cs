@@ -58,4 +58,15 @@ public class CartsController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync([FromQuery] int _page = 1, [FromQuery] int _size = 10, [FromQuery] string? _order = null)
+    {
+        var response = await _cartService.GetAllAsync(_page, _size, _order);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }

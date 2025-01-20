@@ -6,6 +6,9 @@ using DeveloperStore.Sales.Service.Extensions;
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Storage.Interfaces;
 using FluentValidation;
+using DeveloperStore.Sales.Storage.Extensions;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace DeveloperStore.Sales.Service.Services;
 
@@ -162,7 +165,6 @@ public class CartService : ICartService
         var products = await _cartProductRepository.GetByCartIdAsync(id);
         var cartDto = _mapper.Map<CartDto>(existingCart);
 
-        // Mapear os produtos para o DTO
         cartDto.Products = products.Select(p => new CartProductDto
         {
             ProductId = p.ProductId,
@@ -171,4 +173,77 @@ public class CartService : ICartService
 
         return ApiResponseDto<CartDto>.AsSuccess(cartDto);
     }
+
+    public async Task<ApiResponseDto<PagedResponseDto<CartDto>>> GetAllAsync(int page = 1, int size = 10, string? order = null)
+    {
+        try
+        {
+            var query = _cartRepository.GetAllQueryable();
+
+            // Aplicar ordenação dinâmica
+            if (!string.IsNullOrWhiteSpace(order))
+            {
+                var orderParams = order.Split(',');
+                bool isFirstOrder = true;
+
+                foreach (var param in orderParams)
+                {
+                    var isDescending = param.Trim().EndsWith(" desc", StringComparison.OrdinalIgnoreCase);
+                    var propertyName = isDescending
+                        ? param.Replace(" desc", "", StringComparison.OrdinalIgnoreCase).Trim()
+                        : param.Replace(" asc", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+                    var propertyInfo = typeof(Cart).GetProperties()
+                        .FirstOrDefault(p => string.Equals(p.Name, propertyName, StringComparison.OrdinalIgnoreCase));
+
+                    if (propertyInfo == null)
+                    {
+                        return ApiResponseDto<PagedResponseDto<CartDto>>.AsBadRequest(
+                            $"Propriedade '{propertyName}' não encontrada no modelo.");
+                    }
+
+                    query = isFirstOrder
+                        ? query.OrderByDynamic(propertyInfo.Name, isDescending)
+                        : query.ThenByDynamic(propertyInfo.Name, isDescending);
+
+                    isFirstOrder = false;
+                }
+            }
+
+            var totalItems = await query.CountAsync();
+            var carts = await query
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            if (!carts.Any())
+                return ApiResponseDto<PagedResponseDto<CartDto>>.AsNotFound("Nenhum carrinho encontrado.");
+
+            var cartDtos = carts.Select(cart => new CartDto
+            {
+                Id = cart.Id,
+                UserId = cart.UserId,
+                Date = cart.Date,
+                Products = cart.CartProducts.Select(cp => new CartProductDto
+                {
+                    ProductId = cp.ProductId,
+                    Quantity = cp.Quantity
+                }).ToList()
+            }).ToList();
+
+            var pagedResponse = new PagedResponseDto<CartDto>(
+                data: cartDtos,
+                totalItems: totalItems,
+                currentPage: page,
+                totalPages: (int)Math.Ceiling((double)totalItems / size)
+            );
+
+            return ApiResponseDto<PagedResponseDto<CartDto>>.AsSuccess(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponseDto<PagedResponseDto<CartDto>>.AsInternalServerError($"Erro interno: {ex.Message}");
+        }
+    }
+
 }
