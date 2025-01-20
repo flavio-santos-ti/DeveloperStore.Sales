@@ -153,4 +153,22 @@ public class CartService : ICartService
         }
     }
 
+    public async Task<ApiResponseDto<CartDto>> GetByIdAsync(int id)
+    {
+        var existingCart = await _cartRepository.GetByIdAsync(id);
+        if (existingCart == null)
+            return ApiResponseDto<CartDto>.AsNotFound($"Carrinho com ID {id} não encontrado.");
+
+        var products = await _cartProductRepository.GetByCartIdAsync(id);
+        var cartDto = _mapper.Map<CartDto>(existingCart);
+
+        // Mapear os produtos para o DTO
+        cartDto.Products = products.Select(p => new CartProductDto
+        {
+            ProductId = p.ProductId,
+            Quantity = p.Quantity
+        }).ToList();
+
+        return ApiResponseDto<CartDto>.AsSuccess(cartDto);
+    }
 }

@@ -21,7 +21,7 @@ public class CartMap : IEntityTypeConfiguration<Cart>
                .HasColumnName("date")
                .IsRequired();
 
-        builder.HasMany(c => c.Products)
+        builder.HasMany(c => c.CartProducts)
                .WithOne(cp => cp.Cart)
                .HasForeignKey(cp => cp.CartId)
                .OnDelete(DeleteBehavior.Cascade);

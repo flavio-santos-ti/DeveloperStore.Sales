@@ -26,7 +26,7 @@ public class CartProductMap : IEntityTypeConfiguration<CartProduct>
                .IsRequired();
 
         builder.HasOne(cp => cp.Cart)
-               .WithMany(c => c.Products)
+               .WithMany(c => c.CartProducts)
                .HasForeignKey(cp => cp.CartId)
                .OnDelete(DeleteBehavior.Cascade);
 
