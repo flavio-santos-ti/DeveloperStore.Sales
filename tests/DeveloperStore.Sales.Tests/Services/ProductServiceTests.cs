@@ -70,7 +70,7 @@ namespace DeveloperStore.Sales.Tests.Services
         {
             // Arrange
             var productId = 999; // Non-existent product ID
-            _productRepository.GetByIdAsync(productId).Returns((Product?)null);
+            _productRepository.GetByIdAsync(productId).Returns((Product)null);
 
             // Act
             var response = await _productService.GetByIdAsync(productId);
