@@ -34,4 +34,10 @@ public class UserRepository : IUserRepository
         _context.Users.Update(user);
         await Task.CompletedTask;
     }
+
+    public async Task DeleteAsync(User user)
+    {
+        _context.Users.Remove(user);
+        await Task.CompletedTask;
+    }
 }
