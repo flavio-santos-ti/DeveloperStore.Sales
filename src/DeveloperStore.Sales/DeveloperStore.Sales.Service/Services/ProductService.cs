@@ -120,8 +120,8 @@ public class ProductService : IProductService
     {
         try
         {
-            var query = _productRepository.GetAllQueryable();
-
+            var query = _productRepository.GetAllQueryable().AsNoTracking();
+            
             // Ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(order))
             {
@@ -162,9 +162,7 @@ public class ProductService : IProductService
             if (!products.Any())
                 return ApiResponseDto<PagedResponseDto<ProductDto>>.AsNotFound("Nenhum produto encontrado.");
 
-            //var productDtos = _mapper.Map<IEnumerable<ProductDto>>(products) ?? Enumerable.Empty<ProductDto>();
             var productDtos = _mapper.Map<IEnumerable<ProductDto>>(products);
-
 
             var pagedResponse = new PagedResponseDto<ProductDto>(
                 data: productDtos!,
