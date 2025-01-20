@@ -36,4 +36,16 @@ public class UserController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        var response = await _userService.DeleteAsync(id);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
 }

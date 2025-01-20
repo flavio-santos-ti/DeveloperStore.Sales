@@ -89,4 +89,27 @@ public class UserService : IUserService
             return ApiResponseDto<UserDto>.AsInternalServerError($"Erro interno: {ex.Message}");
         }
     }
+
+    public async Task<ApiResponseDto<UserDto>> DeleteAsync(int id)
+    {
+        var existingUser = await _userRepository.GetByIdAsync(id);
+        if (existingUser == null)
+            return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await _userRepository.DeleteAsync(existingUser);
+            await _unitOfWork.CommitAsync();
+
+            var userDto = _mapper.Map<UserDto>(existingUser);
+            return ApiResponseDto<UserDto>.AsSuccess(userDto, $"Usuário com o ID {id} excluído com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ApiResponseDto<UserDto>.AsInternalServerError($"Erro interno: {ex.Message}");
+        }
+    }
+
 }
