@@ -23,4 +23,15 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users.AnyAsync(u => u.Email.ToLower() == email.ToLower());
     }
+
+    public async Task<User?> GetByIdAsync(int id)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public async Task UpdateAsync(User user)
+    {
+        _context.Users.Update(user);
+        await Task.CompletedTask;
+    }
 }

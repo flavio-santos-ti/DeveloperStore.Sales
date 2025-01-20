@@ -18,8 +18,6 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-        //services.AddFluentValidationAutoValidation();
-
         services.AddValidatorsFromAssemblyContaining<RequestProductValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestUserValidator>();
 
