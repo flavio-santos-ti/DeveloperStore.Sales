@@ -87,32 +87,27 @@ public class CartService : ICartService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            // Atualizar informações básicas do carrinho
             existingCart.UserId = dto.UserId;
             existingCart.Date = dto.Date;
 
-            // Atualizar produtos associados
             var existingProducts = await _cartProductRepository.GetByCartIdAsync(id);
 
-            // Remover produtos que não estão mais no DTO
             var productsToRemove = existingProducts.Where(ep => !dto.Products.Any(dp => dp.ProductId == ep.ProductId)).ToList();
             foreach (var product in productsToRemove)
             {
                 await _cartProductRepository.DeleteAsync(product);
             }
 
-            // Adicionar ou atualizar os produtos do DTO
             foreach (var product in dto.Products)
             {
                 var existingProduct = existingProducts.FirstOrDefault(ep => ep.ProductId == product.ProductId);
                 if (existingProduct != null)
                 {
-                    existingProduct.Quantity = product.Quantity; // Atualizar quantidade
+                    existingProduct.Quantity = product.Quantity; 
                     await _cartProductRepository.UpdateAsync(existingProduct);
                 }
                 else
                 {
-                    // Adicionar novo produto
                     var newCartProduct = new CartProduct
                     {
                         CartId = id,
@@ -125,7 +120,6 @@ public class CartService : ICartService
 
             await _unitOfWork.CommitAsync();
 
-            // Mapear o resultado para o DTO
             var updatedCart = await _cartRepository.GetByIdAsync(id);
             var cartDto = _mapper.Map<CartDto>(updatedCart);
             return ApiResponseDto<CartDto>.AsSuccess(cartDto);
@@ -134,6 +128,28 @@ public class CartService : ICartService
         {
             await _unitOfWork.RollbackAsync();
             return ApiResponseDto<CartDto>.AsInternalServerError($"Erro interno: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponseDto<string>> DeleteAsync(int id)
+    {
+        var existingCart = await _cartRepository.GetByIdAsync(id);
+        if (existingCart == null)
+            return ApiResponseDto<string>.AsNotFound($"Carrinho com ID {id} não encontrado.");
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            // Excluindo o carrinho
+            await _cartRepository.DeleteAsync(existingCart);
+            await _unitOfWork.CommitAsync();
+
+            return ApiResponseDto<string>.AsSuccess($"Carrinho com ID {id} excluído com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ApiResponseDto<string>.AsInternalServerError($"Erro interno: {ex.Message}");
         }
     }
 

@@ -25,4 +25,10 @@ public class CartRepository : ICartRepository
             .Include(c => c.Products) 
             .FirstOrDefaultAsync(c => c.Id == id);
     }
+
+    public async Task DeleteAsync(Cart cart)
+    {
+        _context.Carts.Remove(cart);
+        await Task.CompletedTask;
+    }
 }
