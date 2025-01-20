@@ -175,4 +175,15 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<ApiResponseDto<UserDto>> GetByIdAsync(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+
+        if (user == null)
+            return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");
+
+        var userDto = _mapper.Map<UserDto>(user);
+
+        return ApiResponseDto<UserDto>.AsSuccess(userDto);
+    }
 }

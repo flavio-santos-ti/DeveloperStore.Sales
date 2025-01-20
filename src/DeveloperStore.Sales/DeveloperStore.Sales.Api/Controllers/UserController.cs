@@ -58,4 +58,15 @@ public class UserController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync(int id)
+    {
+        var response = await _userService.GetByIdAsync(id);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }
