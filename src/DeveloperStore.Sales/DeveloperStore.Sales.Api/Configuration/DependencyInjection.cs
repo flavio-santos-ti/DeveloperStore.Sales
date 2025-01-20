@@ -14,12 +14,17 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ICartProductRepository, CartProductRepository>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ICartService, CartService>();
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
         services.AddValidatorsFromAssemblyContaining<RequestProductValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestUserValidator>();
+        services.AddValidatorsFromAssemblyContaining<RequestCartValidator>();
+        services.AddValidatorsFromAssemblyContaining<RequestCartProductValidator>();
 
         return services;
     }

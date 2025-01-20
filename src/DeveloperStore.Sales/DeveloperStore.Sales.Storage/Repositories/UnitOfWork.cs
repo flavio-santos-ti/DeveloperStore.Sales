@@ -10,6 +10,8 @@ public class UnitOfWork : IUnitOfWork
     private IDbContextTransaction? _transaction;
     private IProductRepository? _productRepository;
     private IUserRepository? _userRepository;
+    private ICartRepository _cartRepository;
+    private ICartProductRepository? _cartProductRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -18,6 +20,8 @@ public class UnitOfWork : IUnitOfWork
 
     public IProductRepository ProductRepository => _productRepository ??= new ProductRepository(_context);
     public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
+    public ICartRepository CartRepository => _cartRepository ??= new CartRepository(_context);
+    public ICartProductRepository CartProductRepository => _cartProductRepository ??= new CartProductRepository(_context);
 
     public async Task BeginTransactionAsync()
     {
