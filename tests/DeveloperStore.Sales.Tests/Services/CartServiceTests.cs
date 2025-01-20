@@ -22,7 +22,6 @@ namespace DeveloperStore.Sales.Tests.Services
             _cartProductRepository = Substitute.For<ICartProductRepository>();
             _mapper = Substitute.For<IMapper>();
 
-            // Serviço a ser testado
             _cartService = new CartService(
                 _cartRepository,
                 Substitute.For<IUnitOfWork>(),
@@ -63,7 +62,6 @@ namespace DeveloperStore.Sales.Tests.Services
                 }).ToList()
             };
 
-            // Configurando os mocks
             _cartRepository.GetByIdAsync(cartId).Returns(cart);
             _cartProductRepository.GetByCartIdAsync(cartId).Returns(cartProducts);
             _mapper.Map<CartDto>(cart).Returns(expectedCartDto);
@@ -78,7 +76,6 @@ namespace DeveloperStore.Sales.Tests.Services
             response.Data.Should().NotBeNull();
             response.Data.Should().BeEquivalentTo(expectedCartDto);
 
-            // Verificando chamadas nos mocks
             await _cartRepository.Received(1).GetByIdAsync(cartId);
             await _cartProductRepository.Received(1).GetByCartIdAsync(cartId);
             _mapper.Received(1).Map<CartDto>(cart);
@@ -102,7 +99,6 @@ namespace DeveloperStore.Sales.Tests.Services
             response.Data.Should().BeNull();
             response.Message.Should().Be($"Carrinho com ID {cartId} não encontrado.");
 
-            // Verificando chamadas nos mocks
             await _cartRepository.Received(1).GetByIdAsync(cartId);
             await _cartProductRepository.DidNotReceive().GetByCartIdAsync(cartId);
             _mapper.DidNotReceive().Map<CartDto>(Arg.Any<Cart>());
