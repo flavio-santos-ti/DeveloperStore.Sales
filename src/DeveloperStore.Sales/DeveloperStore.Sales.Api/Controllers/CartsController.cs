@@ -47,4 +47,15 @@ public class CartsController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync(int id)
+    {
+        var response = await _cartService.GetByIdAsync(id);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }

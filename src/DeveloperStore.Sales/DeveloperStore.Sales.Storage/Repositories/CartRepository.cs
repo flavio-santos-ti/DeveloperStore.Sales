@@ -19,12 +19,20 @@ public class CartRepository : ICartRepository
         await _context.Carts.AddAsync(cart);
     }
 
+    //public async Task<Cart?> GetByIdAsync(int id)
+    //{
+    //    return await _context.Carts
+    //        .Include(c => c.Products) 
+    //        .FirstOrDefaultAsync(c => c.Id == id);
+    //}
+
     public async Task<Cart?> GetByIdAsync(int id)
     {
         return await _context.Carts
-            .Include(c => c.Products) 
+            .Include(c => c.CartProducts)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
+
 
     public async Task DeleteAsync(Cart cart)
     {
