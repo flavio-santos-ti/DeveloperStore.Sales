@@ -25,4 +25,16 @@ public class CartsController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAsync(int id, [FromBody] RequestCartDto dto)
+    {
+        var response = await _cartService.UpdateAsync(id, dto);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
 }
