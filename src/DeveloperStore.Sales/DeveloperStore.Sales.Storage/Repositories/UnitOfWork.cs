@@ -10,7 +10,7 @@ public class UnitOfWork : IUnitOfWork
     private IDbContextTransaction? _transaction;
     private IProductRepository? _productRepository;
     private IUserRepository? _userRepository;
-    private ICartRepository _cartRepository;
+    private ICartRepository? _cartRepository;
     private ICartProductRepository? _cartProductRepository;
 
     public UnitOfWork(ApplicationDbContext context)
