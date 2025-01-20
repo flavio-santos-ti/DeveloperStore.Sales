@@ -6,6 +6,8 @@ using DeveloperStore.Sales.Service.Extensions;
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Storage.Interfaces;
 using FluentValidation;
+using DeveloperStore.Sales.Storage.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Service.Services;
 
@@ -109,6 +111,67 @@ public class UserService : IUserService
         {
             await _unitOfWork.RollbackAsync();
             return ApiResponseDto<UserDto>.AsInternalServerError($"Erro interno: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponseDto<PagedResponseDto<UserDto>>> GetAllAsync(int page = 1, int size = 10, string? order = null)
+    {
+        try
+        {
+            var query = _userRepository.GetAllQueryable();
+
+            if (!string.IsNullOrWhiteSpace(order))
+            {
+                var orderParams = order.Split(',');
+                bool isFirstOrder = true;
+
+                foreach (var param in orderParams)
+                {
+                    var isDescending = param.Trim().EndsWith(" desc", StringComparison.OrdinalIgnoreCase);
+                    var propertyName = isDescending
+                        ? param.Replace(" desc", "", StringComparison.OrdinalIgnoreCase).Trim()
+                        : param.Replace(" asc", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+                    var propertyInfo = typeof(User).GetProperties()
+                        .FirstOrDefault(p => string.Equals(p.Name, propertyName, StringComparison.OrdinalIgnoreCase));
+
+                    if (propertyInfo == null)
+                    {
+                        return ApiResponseDto<PagedResponseDto<UserDto>>.AsBadRequest(
+                            $"Propriedade '{propertyName}' não encontrada no modelo.");
+                    }
+
+                    query = isFirstOrder
+                        ? query.OrderByDynamic(propertyInfo.Name, isDescending)
+                        : query.ThenByDynamic(propertyInfo.Name, isDescending);
+
+                    isFirstOrder = false;
+                }
+            }
+
+            var totalItems = await query.CountAsync();
+            var users = await query
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            if (!users.Any())
+                return ApiResponseDto<PagedResponseDto<UserDto>>.AsNotFound("Nenhum usuário encontrado.");
+
+            var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+
+            var pagedResponse = new PagedResponseDto<UserDto>(
+                data: userDtos!,
+                totalItems: totalItems,
+                currentPage: page,
+                totalPages: (int)Math.Ceiling((double)totalItems / size)
+            );
+
+            return ApiResponseDto<PagedResponseDto<UserDto>>.AsSuccess(pagedResponse);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponseDto<PagedResponseDto<UserDto>>.AsInternalServerError($"Erro interno: {ex.Message}");
         }
     }
 
