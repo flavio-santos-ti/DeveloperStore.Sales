@@ -45,4 +45,9 @@ public class UserRepository : IUserRepository
     {
         return _context.Users.AsQueryable();
     }
+
+    public async Task<User?> GetByUsernameAsync(string username)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+    }
 }

@@ -18,7 +18,11 @@ public static class IQueryableExtensions
 
         if (property.Type.IsGenericType && property.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            property = Expression.Convert(property, Nullable.GetUnderlyingType(property.Type));
+            var underlyingType = Nullable.GetUnderlyingType(property.Type);
+            if (underlyingType != null)
+            {
+                property = Expression.Convert(property, underlyingType);
+            }
         }
 
         var lambda = Expression.Lambda(property, parameter);
@@ -43,12 +47,16 @@ public static class IQueryableExtensions
 
         foreach (var part in propertyParts)
         {
-            property = Expression.Property(property, part);
+            property = Expression.PropertyOrField(property, part);
         }
 
         if (property.Type.IsGenericType && property.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            property = Expression.Convert(property, Nullable.GetUnderlyingType(property.Type));
+            var underlyingType = Nullable.GetUnderlyingType(property.Type);
+            if (underlyingType != null)
+            {
+                property = Expression.Convert(property, underlyingType);
+            }
         }
 
         var lambda = Expression.Lambda(property, parameter);
@@ -63,5 +71,4 @@ public static class IQueryableExtensions
 
         return source.Provider.CreateQuery<T>(result);
     }
-
 }
