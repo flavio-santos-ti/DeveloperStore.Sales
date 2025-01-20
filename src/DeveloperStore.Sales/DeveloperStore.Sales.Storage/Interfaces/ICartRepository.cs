@@ -6,4 +6,5 @@ public interface ICartRepository
 {
     Task AddAsync(Cart cart);
     Task<Cart?> GetByIdAsync(int id);
+    Task DeleteAsync(Cart cart);
 }
