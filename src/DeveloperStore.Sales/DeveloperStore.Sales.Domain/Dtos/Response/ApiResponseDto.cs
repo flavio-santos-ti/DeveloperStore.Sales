@@ -82,4 +82,14 @@ public class ApiResponseDto<T>
             Message = string.IsNullOrEmpty(message) ? "Resource created successfully" : message
         };
     }
+
+    public static ApiResponseDto<T> AsUnauthorized(string message = "")
+    {
+        return new ApiResponseDto<T>
+        {
+            IsSuccess = false,
+            StatusCode = 401,
+            Message = string.IsNullOrEmpty(message) ? "Unauthorized" : message
+        };
+    }
 }

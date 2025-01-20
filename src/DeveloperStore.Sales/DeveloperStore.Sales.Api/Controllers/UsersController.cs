@@ -1,11 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.User;
 using DeveloperStore.Sales.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeveloperStore.Sales.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -16,6 +18,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> CreateAsync([FromBody] RequestUserDto dto)
     {
         var response = await _userService.CreateAsync(dto);

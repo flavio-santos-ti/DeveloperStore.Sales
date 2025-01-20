@@ -1,11 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Cart;
 using DeveloperStore.Sales.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeveloperStore.Sales.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CartsController : ControllerBase
 {
     private readonly ICartService _cartService;
