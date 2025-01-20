@@ -16,6 +16,7 @@ namespace DeveloperStore.Sales.Tests.Services
         private readonly IMapper _mapper;
         private readonly IProductService _productService;
 
+
         public ProductServiceTests()
         {
             _productRepository = Substitute.For<IProductRepository>();
