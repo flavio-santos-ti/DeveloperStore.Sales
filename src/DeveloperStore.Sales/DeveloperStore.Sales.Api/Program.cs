@@ -1,6 +1,11 @@
+using DeveloperStore.Sales.Api.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddDatabaseConfiguration(builder.Configuration);
+builder.Services.AddDependencyInjection();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
