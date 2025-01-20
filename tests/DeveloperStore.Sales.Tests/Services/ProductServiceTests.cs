@@ -16,6 +16,7 @@ namespace DeveloperStore.Sales.Tests.Services
         private readonly IMapper _mapper;
         private readonly IProductService _productService;
 
+
         public ProductServiceTests()
         {
             _productRepository = Substitute.For<IProductRepository>();
@@ -69,8 +70,8 @@ namespace DeveloperStore.Sales.Tests.Services
         public async Task GetByIdAsync_ShouldReturnNotFound_WhenProductDoesNotExist()
         {
             // Arrange
-            var productId = 999; // Non-existent product ID
-            _productRepository.GetByIdAsync(productId).Returns((Product)null);
+            var productId = 999; 
+            _productRepository.GetByIdAsync(productId).Returns((Product?)null);
 
             // Act
             var response = await _productService.GetByIdAsync(productId);
