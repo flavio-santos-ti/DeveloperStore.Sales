@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Models;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Models;
+
+[ExcludeFromCodeCoverage]
 public class Cart
 {
     public int Id { get; set; }
