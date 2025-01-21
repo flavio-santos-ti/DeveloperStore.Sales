@@ -2,6 +2,13 @@
 
 public interface IUnitOfWork
 {
+    IProductRepository ProductRepository { get; }
+    IUserRepository UserRepository { get; }
+    ICartRepository CartRepository { get; }
+    ICartProductRepository CartProductRepository { get; }
+    ISaleRepository SaleRepository { get; }
+    ISaleItemRepository SaleItemRepository { get; }
+
     Task BeginTransactionAsync();
     Task SaveChangesAsync();
     Task RollbackAsync();

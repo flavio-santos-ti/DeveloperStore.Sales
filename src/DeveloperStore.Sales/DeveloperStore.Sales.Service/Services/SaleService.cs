@@ -12,17 +12,24 @@ namespace DeveloperStore.Sales.Service.Services;
 
 public class SaleService : ISaleService
 {
-    private readonly ISaleRepository _saleRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IMediator _mediator;
 
-    public SaleService(ISaleRepository saleRepository, IUnitOfWork unitOfWork, IMapper mapper, IMediator mediator)
+    public SaleService(IUnitOfWork unitOfWork, IMapper mapper, IMediator mediator)
     {
-        _saleRepository = saleRepository ?? throw new ArgumentNullException(nameof(saleRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+    }
+
+    private decimal CalculateDiscount(int quantity, decimal unitPrice)
+    {
+        if (quantity >= 10 && quantity <= 20)
+            return unitPrice * 0.2m;
+        if (quantity >= 4)
+            return unitPrice * 0.1m;
+        return 0;
     }
 
     public async Task<ApiResponseDto<SaleDto>> CreateAsync(RequestSaleDto dto)
@@ -63,7 +70,7 @@ public class SaleService : ISaleService
                 sale.TotalAmount += totalAmount;
             }
 
-            await _saleRepository.AddAsync(sale);
+            await _unitOfWork.SaleRepository.AddAsync(sale);
             await _unitOfWork.CommitAsync();
 
             var saleCreatedEvent = new SaleCreatedEvent(sale.Id, sale.SaleNumber, sale.SaleDate, sale.CustomerId, sale.TotalAmount);
@@ -81,7 +88,7 @@ public class SaleService : ISaleService
 
     public async Task<ApiResponseDto<string>> CancelSaleAsync(int saleId)
     {
-        var sale = await _saleRepository.GetByIdAsync(saleId);
+        var sale = await _unitOfWork.SaleRepository.GetByIdAsync(saleId);
         if (sale == null)
             return ApiResponseDto<string>.AsNotFound("Venda não encontrada.");
 
@@ -93,7 +100,7 @@ public class SaleService : ISaleService
         try
         {
             sale.IsCancelled = true;
-            await _saleRepository.UpdateAsync(sale);
+            await _unitOfWork.SaleRepository.UpdateAsync(sale);
             await _unitOfWork.CommitAsync();
 
             var saleCancelledEvent = new SaleCancelledEvent(
@@ -121,7 +128,7 @@ public class SaleService : ISaleService
         if (dto == null || !dto.Items.Any())
             return ApiResponseDto<string>.AsBadRequest("A venda deve conter pelo menos um item.");
 
-        var sale = await _saleRepository.GetByIdAsync(saleId);
+        var sale = await _unitOfWork.SaleRepository.GetByIdAsync(saleId);
         if (sale == null)
             return ApiResponseDto<string>.AsNotFound("Venda não encontrada.");
 
@@ -155,7 +162,7 @@ public class SaleService : ISaleService
                 sale.TotalAmount += totalAmount;
             }
 
-            await _saleRepository.UpdateAsync(sale);
+            await _unitOfWork.SaleRepository.UpdateAsync(sale);
             await _unitOfWork.CommitAsync();
 
             var saleModifiedEvent = new SaleModifiedEvent(
@@ -178,7 +185,7 @@ public class SaleService : ISaleService
 
     public async Task<ApiResponseDto<string>> CancelSaleItemAsync(int saleId, int itemId)
     {
-        var sale = await _saleRepository.GetByIdAsync(saleId);
+        var sale = await _unitOfWork.SaleRepository.GetByIdAsync(saleId);
         if (sale == null)
             return ApiResponseDto<string>.AsNotFound("Venda não encontrada.");
 
@@ -194,7 +201,7 @@ public class SaleService : ISaleService
 
             sale.TotalAmount = sale.Items.Sum(i => i.TotalAmount);
 
-            await _saleRepository.UpdateAsync(sale);
+            await _unitOfWork.SaleRepository.UpdateAsync(sale);
             await _unitOfWork.CommitAsync();
 
             var itemCancelledEvent = new ItemCancelledEvent(
@@ -218,12 +225,65 @@ public class SaleService : ISaleService
         }
     }
 
-    private decimal CalculateDiscount(int quantity, decimal unitPrice)
+    public async Task<ApiResponseDto<SaleDto>> CheckoutCartAsync(int cartId)
     {
-        if (quantity >= 10 && quantity <= 20)
-            return unitPrice * 0.2m;
-        if (quantity >= 4)
-            return unitPrice * 0.1m;
-        return 0;
+        var cart = await _unitOfWork.CartRepository.GetByIdAsync(cartId);
+        if (cart == null || !cart.CartProducts.Any())
+            return ApiResponseDto<SaleDto>.AsNotFound("Carrinho não encontrado ou vazio.");
+        
+        await _unitOfWork.BeginTransactionAsync();
+
+        try
+        {
+            var sale = new Sale
+            {
+                SaleNumber = Guid.NewGuid().ToString(),
+                SaleDate = DateTime.UtcNow,
+                CustomerId = cart.UserId,
+                Branch = "Default Branch", 
+                TotalAmount = 0
+            };
+
+            foreach (var cartProduct in cart.CartProducts)
+            {
+                var product = await _unitOfWork.ProductRepository.GetByIdAsync(cartProduct.ProductId);
+                if (product == null)
+                    throw new InvalidOperationException($"Produto com ID {cartProduct.ProductId} não encontrado.");
+
+                var totalAmount = cartProduct.Quantity * product.Price;
+
+                sale.Items.Add(new SaleItem
+                {
+                    ProductId = product.Id,
+                    Quantity = cartProduct.Quantity,
+                    UnitPrice = product.Price,
+                    Discount = 0, 
+                    TotalAmount = totalAmount
+                });
+
+                sale.TotalAmount += totalAmount;
+            }
+
+            await _unitOfWork.SaleRepository.AddAsync(sale);
+            await _unitOfWork.CommitAsync();
+
+            var saleCreatedEvent = new SaleCreatedEvent(
+                sale.Id,
+                sale.SaleNumber,
+                sale.SaleDate,
+                sale.CustomerId,
+                sale.TotalAmount
+            );
+            await _mediator.Publish(saleCreatedEvent);
+
+            var saleDto = _mapper.Map<SaleDto>(sale);
+
+            return ApiResponseDto<SaleDto>.AsCreated(saleDto);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ApiResponseDto<SaleDto>.AsInternalServerError($"Erro ao realizar checkout: {ex.Message}");
+        }
     }
 }
