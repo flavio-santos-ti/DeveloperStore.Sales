@@ -302,4 +302,160 @@ public class UserServiceTests
         await unitOfWorkMock.DidNotReceive().BeginTransactionAsync(); 
         await unitOfWorkMock.DidNotReceive().CommitAsync(); 
     }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnSuccess_WhenUserIsUpdated()
+    {
+        // Arrange
+        int userId = 1;
+        var requestUserDto = new RequestUserDto
+        {
+            Email = "updated@example.com",
+            Username = "updateduser",
+            Password = "UpdatedPassword123",
+            Name = new NameDto
+            {
+                Firstname = "Updated",
+                Lastname = "User"
+            },
+            Address = new AddressDto
+            {
+                City = "Updated City",
+                Street = "Updated Street",
+                Number = 999,
+                Zipcode = "99999-999",
+                Geolocation = new GeolocationDto
+                {
+                    Lat = "99.9999",
+                    Long = "99.9999"
+                }
+            },
+            Phone = "999999999",
+            Status = "Active",
+            Role = "Manager"
+        };
+
+        var existingUser = new User
+        {
+            Id = userId,
+            Email = "original@example.com",
+            Username = "originaluser",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("OriginalPassword"),
+            Firstname = "Original",
+            Lastname = "User",
+            City = "Original City",
+            Street = "Original Street",
+            AddressNumber = 123,
+            Zipcode = "12345-678",
+            GeolocationLat = "0.0000",
+            GeolocationLong = "0.0000",
+            Phone = "123456789",
+            Status = "Active",
+            Role = "Customer"
+        };
+
+        var updatedUserDto = new UserDto
+        {
+            Email = requestUserDto.Email,
+            Username = requestUserDto.Username,
+            Name = requestUserDto.Name,
+            Address = requestUserDto.Address,
+            Phone = requestUserDto.Phone,
+            Status = requestUserDto.Status,
+            Role = requestUserDto.Role
+        };
+
+        var userRepositoryMock = Substitute.For<IUserRepository>();
+        var unitOfWorkMock = Substitute.For<IUnitOfWork>();
+        var mapperMock = Substitute.For<IMapper>();
+        var validatorMock = Substitute.For<IValidator<RequestUserDto>>();
+
+        userRepositoryMock.GetByIdAsync(userId).Returns(existingUser);
+        validatorMock.ValidateAsync(requestUserDto).Returns(new FluentValidation.Results.ValidationResult());
+        mapperMock.Map(requestUserDto, existingUser).Returns(existingUser);
+        mapperMock.Map<UserDto>(existingUser).Returns(updatedUserDto);
+
+        var userService = new UserService(userRepositoryMock, mapperMock, validatorMock, unitOfWorkMock);
+
+        // Act
+        var result = await userService.UpdateAsync(userId, requestUserDto);
+
+        // Assert
+        result.Should().NotBeNull("o resultado da operação não deve ser nulo");
+        result.IsSuccess.Should().BeTrue("a operação deve ser bem-sucedida");
+        result.StatusCode.Should().Be(200, "o status HTTP deve ser 200 quando a atualização é bem-sucedida");
+        result.Data.Should().BeEquivalentTo(updatedUserDto, "os dados retornados devem corresponder ao usuário atualizado");
+
+        // Verify
+        await userRepositoryMock.Received(1).GetByIdAsync(userId);
+        await userRepositoryMock.Received(1).UpdateAsync(existingUser);
+        await unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await unitOfWorkMock.Received(1).CommitAsync();
+        await validatorMock.Received(1).ValidateAsync(requestUserDto);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        int userId = 999;
+        var requestUserDto = new RequestUserDto
+        {
+            Email = "nonexistent@example.com",
+            Username = "nonexistentuser",
+            Password = "SomePassword123",
+            Name = new NameDto
+            {
+                Firstname = "Nonexistent",
+                Lastname = "User"
+            },
+            Address = new AddressDto
+            {
+                City = "Nowhere City",
+                Street = "Unknown Street",
+                Number = 0,
+                Zipcode = "00000-000",
+                Geolocation = new GeolocationDto
+                {
+                    Lat = "0.0",
+                    Long = "0.0"
+                }
+            },
+            Phone = "000000000",
+            Status = "Inactive",
+            Role = "Customer"
+        };
+
+        var expectedMessage = $"Usuário com o ID {userId} não encontrado.";
+
+        var userRepositoryMock = Substitute.For<IUserRepository>();
+        var unitOfWorkMock = Substitute.For<IUnitOfWork>();
+        var mapperMock = Substitute.For<IMapper>();
+        var validatorMock = Substitute.For<IValidator<RequestUserDto>>();
+
+        var validationResult = new FluentValidation.Results.ValidationResult();
+        validatorMock.ValidateAsync(requestUserDto, Arg.Any<CancellationToken>())
+                     .Returns(validationResult);
+
+        userRepositoryMock.GetByIdAsync(userId).Returns((User?)null);
+
+        var userService = new UserService(userRepositoryMock, mapperMock, validatorMock, unitOfWorkMock);
+
+        // Act
+        var result = await userService.UpdateAsync(userId, requestUserDto);
+
+        // Assert
+        result.Should().NotBeNull("o resultado da operação não deve ser nulo");
+        result.IsSuccess.Should().BeFalse("a operação deve falhar quando o usuário não existe");
+        result.StatusCode.Should().Be(404, "o status HTTP deve ser 404 para um recurso não encontrado");
+        result.Message.Should().Be(expectedMessage, "a mensagem deve indicar que o usuário não foi encontrado");
+        result.Data.Should().BeNull("os dados devem ser nulos quando o usuário não existe");
+
+        // Verify
+        await userRepositoryMock.Received(1).GetByIdAsync(userId);
+        await userRepositoryMock.DidNotReceive().UpdateAsync(Arg.Any<User>());
+        await unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await unitOfWorkMock.DidNotReceive().CommitAsync();
+        await validatorMock.Received(1).ValidateAsync(requestUserDto, Arg.Any<CancellationToken>());
+    }
 }
