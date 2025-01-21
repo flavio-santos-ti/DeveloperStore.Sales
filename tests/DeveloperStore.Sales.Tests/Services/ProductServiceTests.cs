@@ -225,4 +225,58 @@ public class ProductServiceTests
         _mapperMock.DidNotReceive().Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>());
     }
 
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnSuccess_WhenProductExists()
+    {
+        // Arrange
+        var productId = 1;
+        var existingProduct = new Product
+        {
+            Id = productId,
+            Title = "Test Product",
+            Price = 100.0m,
+            Description = "A sample product for testing",
+            Category = "TestCategory"
+        };
+
+        _productRepositoryMock.GetByIdAsync(productId).Returns(existingProduct);
+
+        // Act
+        var response = await _productService.DeleteAsync(productId);
+
+        // Assert
+        response.Should().NotBeNull("O resultado não deve ser nulo");
+        response.IsSuccess.Should().BeTrue("Deve ser sucesso");
+        response.StatusCode.Should().Be(200, "O status HTTP deve ser 200");
+        response.Message.Should().Be($"Produto com o ID {productId} excluído com sucesso.");
+
+        // Verify 
+        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
+        await _productRepositoryMock.Received(1).DeleteAsync(existingProduct);
+        await _unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await _unitOfWorkMock.Received(1).CommitAsync();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnNotFound_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var productId = 999;
+        _productRepositoryMock.GetByIdAsync(productId).Returns((Product?)null);
+
+        // Act
+        var response = await _productService.DeleteAsync(productId);
+
+        // Assert
+        response.Should().NotBeNull("O resultado não deve ser nulo");
+        response.IsSuccess.Should().BeFalse("Deve ser falha");
+        response.StatusCode.Should().Be(404, "O status HTTP deve ser 404 para recursos não encontrados");
+        response.Message.Should().Be($"Produto com o ID {productId} não encontrado.");
+
+        // Verify 
+        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
+        await _productRepositoryMock.DidNotReceive().DeleteAsync(Arg.Any<Product>());
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.DidNotReceive().CommitAsync();
+    }
 }
