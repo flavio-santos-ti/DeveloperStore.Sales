@@ -47,7 +47,6 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
-
     public async Task CommitAsync()
     {
         try
@@ -66,5 +65,4 @@ public class UnitOfWork : IUnitOfWork
             throw;
         }
     }
-
 }

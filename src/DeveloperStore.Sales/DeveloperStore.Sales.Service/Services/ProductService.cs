@@ -269,6 +269,4 @@ public class ProductService : IProductService
             return ApiResponseDto<ProductDto>.AsInternalServerError($"Erro interno: {ex.Message}");
         }
     }
-
-
 }

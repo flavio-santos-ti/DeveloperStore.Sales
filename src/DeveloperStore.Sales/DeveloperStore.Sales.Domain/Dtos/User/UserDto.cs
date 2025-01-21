@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Dtos.User;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Dtos.User;
+
+[ExcludeFromCodeCoverage]
 public class UserDto
 {
     public string Email { get; set; } = string.Empty;

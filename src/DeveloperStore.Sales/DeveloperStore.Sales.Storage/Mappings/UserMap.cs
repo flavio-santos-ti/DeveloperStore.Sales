@@ -1,9 +1,11 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Storage.Mappings;
 
+[ExcludeFromCodeCoverage]
 public class UserMap : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)

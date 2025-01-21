@@ -9,7 +9,6 @@ using FluentValidation;
 using DeveloperStore.Sales.Storage.Extensions;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace DeveloperStore.Sales.Service.Services;
 
 public class CartService : ICartService

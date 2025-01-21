@@ -1,7 +1,9 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Domain.Dtos.Product;
 
+[ExcludeFromCodeCoverage]
 public class ProductDto
 {
     public int Id { get; set; }
