@@ -12,6 +12,8 @@ public class UnitOfWork : IUnitOfWork
     private IUserRepository? _userRepository;
     private ICartRepository? _cartRepository;
     private ICartProductRepository? _cartProductRepository;
+    private ISaleRepository? _saleRepository;
+    private ISaleItemRepository? _saleItemRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -22,6 +24,9 @@ public class UnitOfWork : IUnitOfWork
     public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
     public ICartRepository CartRepository => _cartRepository ??= new CartRepository(_context);
     public ICartProductRepository CartProductRepository => _cartProductRepository ??= new CartProductRepository(_context);
+    public ISaleRepository SaleRepository => _saleRepository ??= new SaleRepository(_context);
+    public ISaleItemRepository SaleItemRepository => _saleItemRepository ??= new SaleItemRepository(_context);
+
 
     public async Task BeginTransactionAsync()
     {
