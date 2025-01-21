@@ -17,24 +17,24 @@ public class CartServiceTests
     private readonly IMapper _mapperMock;
     private readonly CartService _cartService;
     private readonly IValidator<RequestCartDto> _validatorMock;
+    private readonly IUnitOfWork _unitOfWorkMock;
 
     public CartServiceTests()
     {
         _cartRepositoryMock = Substitute.For<ICartRepository>();
         _cartProductRepositoryMock = Substitute.For<ICartProductRepository>();
         _mapperMock = Substitute.For<IMapper>();
-        _validatorMock = Substitute.For<IValidator<RequestCartDto>>(); // Inicializa o mock do validador
+        _unitOfWorkMock = Substitute.For<IUnitOfWork>();
+        _validatorMock = Substitute.For<IValidator<RequestCartDto>>(); 
 
-        // Configuração do mock do validador
         var validationResultMock = new FluentValidation.Results.ValidationResult();
         _validatorMock.ValidateAsync(Arg.Any<RequestCartDto>()).Returns(validationResultMock);
 
-        // Passa o mock configurado no construtor do CartService
         _cartService = new CartService(
             _cartRepositoryMock,
-            Substitute.For<IUnitOfWork>(),
+            _unitOfWorkMock,
             _mapperMock,
-            _validatorMock, // Passa o mock do validador configurado aqui
+            _validatorMock,
             _cartProductRepositoryMock
         );
     }
@@ -127,7 +127,7 @@ public class CartServiceTests
             Id = cart.Id,
             UserId = cart.UserId,
             Date = cart.Date,
-            Products = new List<CartProductDto>() // Simule os produtos, se necessário
+            Products = new List<CartProductDto>() 
         }).ToList();
 
         var mockQueryable = new TestAsyncEnumerable<Cart>(mockCarts);
@@ -366,5 +366,81 @@ public class CartServiceTests
         await _cartProductRepositoryMock.DidNotReceive().AddAsync(Arg.Any<CartProduct>());
         await _cartProductRepositoryMock.DidNotReceive().DeleteAsync(Arg.Any<CartProduct>());
         await _cartProductRepositoryMock.DidNotReceive().UpdateAsync(Arg.Any<CartProduct>());
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateCart_WhenRequestIsValid()
+    {
+        // Arrange
+        var requestDto = new RequestCartDto
+        {
+            UserId = 456,
+            Date = DateTime.Now,
+            Products = new List<RequestCartProductDto>
+        {
+            new RequestCartProductDto { ProductId = 101, Quantity = 5 },
+            new RequestCartProductDto { ProductId = 102, Quantity = 3 }
+        }
+        };
+
+        var validationResult = new FluentValidation.Results.ValidationResult();
+        var createdCart = new Cart
+        {
+            Id = 1,
+            UserId = requestDto.UserId,
+            Date = requestDto.Date
+        };
+
+        var cartDto = new CartDto
+        {
+            Id = createdCart.Id,
+            UserId = createdCart.UserId,
+            Date = createdCart.Date,
+            Products = requestDto.Products.Select(p => new CartProductDto
+            {
+                ProductId = p.ProductId,
+                Quantity = p.Quantity
+            }).ToList()
+        };
+
+        _validatorMock.ValidateAsync(Arg.Any<RequestCartDto>()).Returns(validationResult);
+
+        _cartRepositoryMock.AddAsync(Arg.Any<Cart>()).Returns(Task.CompletedTask);
+        _cartRepositoryMock.When(x => x.AddAsync(Arg.Any<Cart>()))
+            .Do(callInfo => {
+                var cart = callInfo.Arg<Cart>();
+                cart.Id = createdCart.Id;
+            });
+
+        _mapperMock.Map<CartDto>(Arg.Any<Cart>()).Returns(cartDto);
+
+        // Act
+        var result = await _cartService.CreateAsync(requestDto);
+
+        // Assert
+        result.Should().NotBeNull("a resposta não deve ser nula");
+        result.IsSuccess.Should().BeTrue("a operação deve ser bem-sucedida");
+        result.StatusCode.Should().Be(201, "o status HTTP deve indicar que um recurso foi criado");
+        result.Data.Should().NotBeNull("os dados retornados não devem ser nulos");
+        result.Data.Should().BeEquivalentTo(cartDto, "os dados retornados devem corresponder ao carrinho criado");
+
+        // Verify
+        await _cartRepositoryMock.Received(1).AddAsync(Arg.Is<Cart>(c =>
+            c.UserId == requestDto.UserId &&
+            c.Date == requestDto.Date
+        ));
+
+        foreach (var product in requestDto.Products)
+        {
+            await _cartProductRepositoryMock.Received(1).AddAsync(Arg.Is<CartProduct>(cp =>
+                cp.ProductId == product.ProductId &&
+                cp.Quantity == product.Quantity &&
+                cp.CartId == createdCart.Id
+            ));
+        }
+
+        await _unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await _unitOfWorkMock.Received(1).SaveChangesAsync();
+        await _unitOfWorkMock.Received(1).CommitAsync();
     }
 }
