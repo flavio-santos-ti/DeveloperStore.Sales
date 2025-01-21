@@ -15,7 +15,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartProduct> CartProducts { get; set; }
-
+    public DbSet<Sale> Sales { get; set; }
+    public DbSet<SaleItem> SaleItems { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -24,5 +25,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserMap());
         modelBuilder.ApplyConfiguration(new CartMap());
         modelBuilder.ApplyConfiguration(new CartProductMap());
+        modelBuilder.ApplyConfiguration(new SaleMap());
+        modelBuilder.ApplyConfiguration(new SaleItemMap());
     }
 }

@@ -1,4 +1,5 @@
-﻿using DeveloperStore.Sales.Service.Interfaces;
+﻿using DeveloperStore.Sales.Domain.Events;
+using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Service.Validations;
 using DeveloperStore.Sales.Storage.Interfaces;
@@ -29,6 +30,11 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<RequestUserValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestCartValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestCartProductValidator>();
+        
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleCreatedEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleCreatedEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleModifiedEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ItemCancelledEvent).Assembly));
 
         return services;
     }
