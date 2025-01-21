@@ -1,7 +1,9 @@
-﻿namespace DeveloperStore.Sales.Domain.Events;
+﻿using MediatR;
+
+namespace DeveloperStore.Sales.Domain.Events;
 
 
-public class SaleCreatedEvent
+public class SaleCreatedEvent : INotification
 {
     public int SaleId { get; }
     public string SaleNumber { get; }
