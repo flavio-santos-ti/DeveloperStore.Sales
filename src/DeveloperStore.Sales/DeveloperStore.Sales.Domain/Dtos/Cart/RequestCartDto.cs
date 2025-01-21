@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Dtos.Cart;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Dtos.Cart;
+
+[ExcludeFromCodeCoverage]
 public class RequestCartDto
 {
     public int UserId { get; set; }

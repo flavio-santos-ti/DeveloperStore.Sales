@@ -1,8 +1,10 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 namespace DeveloperStore.Sales.Storage.Mappings;
 
+[ExcludeFromCodeCoverage]
 public class ProductMap : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)

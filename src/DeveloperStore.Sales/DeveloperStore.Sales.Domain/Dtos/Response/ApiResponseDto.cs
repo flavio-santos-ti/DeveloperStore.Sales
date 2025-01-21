@@ -1,7 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace DeveloperStore.Sales.Domain.Dtos.Response;
 
+[ExcludeFromCodeCoverage]
 public class ApiResponseDto<T>
 {
     public bool IsSuccess { get; set; }

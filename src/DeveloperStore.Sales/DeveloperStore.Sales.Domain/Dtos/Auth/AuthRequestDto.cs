@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Dtos.Auth;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Dtos.Auth;
+
+[ExcludeFromCodeCoverage]
 public class AuthRequestDto
 {
     public string Username { get; set; } = string.Empty;
