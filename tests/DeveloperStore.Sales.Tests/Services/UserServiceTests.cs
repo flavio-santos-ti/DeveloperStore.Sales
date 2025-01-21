@@ -458,4 +458,111 @@ public class UserServiceTests
         await unitOfWorkMock.DidNotReceive().CommitAsync();
         await validatorMock.Received(1).ValidateAsync(requestUserDto, Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task CreateAsync_ShouldReturnSuccess_WhenUserIsValid()
+    {
+        // Arrange
+        var requestUserDto = new RequestUserDto
+        {
+            Email = "test@example.com",
+            Username = "testuser",
+            Password = "password123",
+            Name = new NameDto
+            {
+                Firstname = "Test",
+                Lastname = "User"
+            },
+            Address = new AddressDto
+            {
+                City = "Test City",
+                Street = "Test Street",
+                Number = 123,
+                Zipcode = "12345-678",
+                Geolocation = new GeolocationDto
+                {
+                    Lat = "0.0000",
+                    Long = "0.0000"
+                }
+            },
+            Phone = "123456789",
+            Status = "Active",
+            Role = "Customer"
+        };
+
+        var user = new User
+        {
+            Id = 1,
+            Email = requestUserDto.Email,
+            Username = requestUserDto.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(requestUserDto.Password),
+            Firstname = requestUserDto.Name.Firstname,
+            Lastname = requestUserDto.Name.Lastname,
+            City = requestUserDto.Address.City,
+            Street = requestUserDto.Address.Street,
+            AddressNumber = requestUserDto.Address.Number,
+            Zipcode = requestUserDto.Address.Zipcode,
+            GeolocationLat = requestUserDto.Address.Geolocation.Lat,
+            GeolocationLong = requestUserDto.Address.Geolocation.Long,
+            Phone = requestUserDto.Phone,
+            Status = requestUserDto.Status,
+            Role = requestUserDto.Role
+        };
+
+        var userDto = new UserDto
+        {
+            Email = user.Email,
+            Username = user.Username,
+            Name = new NameDto
+            {
+                Firstname = user.Firstname,
+                Lastname = user.Lastname
+            },
+            Address = new AddressDto
+            {
+                City = user.City,
+                Street = user.Street,
+                Number = user.AddressNumber,
+                Zipcode = user.Zipcode,
+                Geolocation = new GeolocationDto
+                {
+                    Lat = user.GeolocationLat,
+                    Long = user.GeolocationLong
+                }
+            },
+            Phone = user.Phone,
+            Status = user.Status,
+            Role = user.Role
+        };
+
+        var userRepositoryMock = Substitute.For<IUserRepository>();
+        var unitOfWorkMock = Substitute.For<IUnitOfWork>();
+        var mapperMock = Substitute.For<IMapper>();
+        var validatorMock = Substitute.For<IValidator<RequestUserDto>>();
+
+        // Configurar mocks
+        userRepositoryMock.ExistsByEmailAsync(requestUserDto.Email).Returns(false);
+        mapperMock.Map<User>(requestUserDto).Returns(user);
+        mapperMock.Map<UserDto>(user).Returns(userDto);
+        validatorMock.ValidateAsync(requestUserDto, Arg.Any<CancellationToken>())
+            .Returns(new FluentValidation.Results.ValidationResult());
+
+        var userService = new UserService(userRepositoryMock, mapperMock, validatorMock, unitOfWorkMock);
+
+        // Act
+        var result = await userService.CreateAsync(requestUserDto);
+
+        // Assert
+        result.Should().NotBeNull("o resultado da operação não deve ser nulo");
+        result.IsSuccess.Should().BeTrue("a operação deve ser bem-sucedida para um usuário válido");
+        result.StatusCode.Should().Be(201, "o status HTTP deve ser 201 para uma criação bem-sucedida");
+        result.Data.Should().BeEquivalentTo(userDto, "os dados retornados devem corresponder ao usuário criado");
+
+        // Verify
+        await userRepositoryMock.Received(1).ExistsByEmailAsync(requestUserDto.Email);
+        await userRepositoryMock.Received(1).AddAsync(user);
+        await unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await unitOfWorkMock.Received(1).CommitAsync();
+        await validatorMock.Received(1).ValidateAsync(requestUserDto, Arg.Any<CancellationToken>());
+    }
 }
