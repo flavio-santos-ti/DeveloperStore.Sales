@@ -152,7 +152,6 @@ public class ProductService : IProductService
                 }
             }
 
-            // Paginação
             var totalItems = await query.CountAsync();
             var products = await query
                 .Skip((page - 1) * size)
@@ -191,11 +190,9 @@ public class ProductService : IProductService
             if (string.IsNullOrWhiteSpace(category))
                 return ApiResponseDto<PagedResponseDto<ProductDto>>.AsBadRequest("A categoria não pode ser nula ou vazia.");
 
-            // Convertendo a consulta para memória antes da comparação
             var query = _productRepository.GetAllQueryable()
                 .Where(p => p.Category.ToLower() == category.ToLower());
 
-            // Ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(order))
             {
                 var orderParams = order.Split(',');
@@ -225,7 +222,6 @@ public class ProductService : IProductService
                 }
             }
 
-            // Paginação
             var totalItems = await query.CountAsync();
             var products = await query
                 .Skip((page - 1) * size)
