@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Dtos.Response;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Dtos.Response;
+
+[ExcludeFromCodeCoverage]
 public class PagedResponseDto<T>
 {
     public IEnumerable<T> Data { get; set; }

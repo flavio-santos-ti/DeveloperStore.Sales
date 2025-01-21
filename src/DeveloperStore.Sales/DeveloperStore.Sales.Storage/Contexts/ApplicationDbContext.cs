@@ -1,9 +1,11 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Storage.Mappings;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Storage.Contexts;
 
+[ExcludeFromCodeCoverage]
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions options) : base(options)

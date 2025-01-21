@@ -1,7 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 
 namespace DeveloperStore.Sales.Storage.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class IQueryableExtensions
 {
     public static IQueryable<T> OrderByDynamic<T>(this IQueryable<T> source, string propertyName, bool descending)

@@ -1,8 +1,10 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Cart;
 using FluentValidation;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Service.Validations;
 
+[ExcludeFromCodeCoverage]
 public class RequestCartProductValidator : AbstractValidator<RequestCartProductDto>
 {
     public RequestCartProductValidator()

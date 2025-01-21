@@ -26,7 +26,6 @@ public class CartRepository : ICartRepository
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-
     public async Task DeleteAsync(Cart cart)
     {
         _context.Carts.Remove(cart);

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using DeveloperStore.Sales.Domain.Dtos.User;
 using DeveloperStore.Sales.Domain.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Service.Mappings;
 
+[ExcludeFromCodeCoverage]
 public class UserMappingProfile : Profile
 {
     public UserMappingProfile()

@@ -1,7 +1,9 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Domain.Dtos.Product;
 
+[ExcludeFromCodeCoverage]
 public class RequestProductDto
 {
     public string Title { get; set; } = string.Empty;

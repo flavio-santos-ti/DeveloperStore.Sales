@@ -1,9 +1,10 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Product;
-using DeveloperStore.Sales.Storage.Interfaces;
 using FluentValidation;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveloperStore.Sales.Service.Validations;
 
+[ExcludeFromCodeCoverage]
 public class RequestProductValidator : AbstractValidator<RequestProductDto>
 {
     public RequestProductValidator()

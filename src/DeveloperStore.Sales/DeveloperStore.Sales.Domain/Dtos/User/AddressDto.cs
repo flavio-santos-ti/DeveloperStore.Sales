@@ -1,5 +1,8 @@
-﻿namespace DeveloperStore.Sales.Domain.Dtos.User;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace DeveloperStore.Sales.Domain.Dtos.User;
+
+[ExcludeFromCodeCoverage]
 public class AddressDto
 {
     public string City { get; set; } = string.Empty;
