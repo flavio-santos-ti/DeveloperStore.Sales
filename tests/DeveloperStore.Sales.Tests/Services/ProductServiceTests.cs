@@ -17,14 +17,15 @@ public class ProductServiceTests
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly IMapper _mapperMock;
     private readonly IProductService _productService;
-
+    private readonly IValidator<RequestProductDto> _validatorMock;
 
     public ProductServiceTests()
     {
         _productRepositoryMock = Substitute.For<IProductRepository>();
         _unitOfWorkMock = Substitute.For<IUnitOfWork>();
         _mapperMock = Substitute.For<IMapper>();
-        _productService = new ProductService(_productRepositoryMock, _mapperMock, Substitute.For<IValidator<RequestProductDto>>(), _unitOfWorkMock);
+        _validatorMock = Substitute.For<IValidator<RequestProductDto>>();
+        _productService = new ProductService(_productRepositoryMock, _mapperMock, _validatorMock, _unitOfWorkMock);
     }
 
     [Fact]
@@ -276,6 +277,104 @@ public class ProductServiceTests
         // Verify 
         await _productRepositoryMock.Received(1).GetByIdAsync(productId);
         await _productRepositoryMock.DidNotReceive().DeleteAsync(Arg.Any<Product>());
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.DidNotReceive().CommitAsync();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnSuccess_WhenProductIsUpdated()
+    {
+        // Arrange
+        var productId = 1;
+        var requestDto = new RequestProductDto
+        {
+            Title = "Updated Product",
+            Price = 150.0m,
+            Description = "Updated description",
+            Category = "Updated Category",
+            Image = "http://example.com/updated-image.jpg"
+        };
+
+        var existingProduct = new Product
+        {
+            Id = productId,
+            Title = "Original Product",
+            Price = 100.0m,
+            Description = "Original description",
+            Category = "Original Category",
+            Image = "http://example.com/original-image.jpg"
+        };
+
+        var validationResult = new FluentValidation.Results.ValidationResult(); // No errors in validation
+
+        // Mock repository and validator behavior
+        _productRepositoryMock.GetByIdAsync(productId).Returns(existingProduct);
+        _validatorMock.ValidateAsync(requestDto).Returns(validationResult);
+
+        var updatedProductDto = new ProductDto
+        {
+            Id = productId,
+            Title = requestDto.Title,
+            Price = requestDto.Price,
+            Description = requestDto.Description,
+            Category = requestDto.Category,
+            Image = requestDto.Image
+        };
+
+        // Mock mapper behavior
+        _mapperMock.Map(requestDto, existingProduct).Returns(existingProduct);
+        _mapperMock.Map<ProductDto>(existingProduct).Returns(updatedProductDto);
+
+        // Act
+        var response = await _productService.UpdateAsync(productId, requestDto);
+
+        // Assert
+        response.Should().NotBeNull("O resultado não deve ser nulo");
+        response.IsSuccess.Should().BeTrue("A operação deve ser bem-sucedida");
+        response.StatusCode.Should().Be(200, "O status HTTP deve ser 200");
+        response.Data.Should().BeEquivalentTo(updatedProductDto, "Os dados retornados devem corresponder ao produto atualizado");
+
+        // Verify repository interactions
+        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
+        await _productRepositoryMock.Received(1).UpdateAsync(existingProduct);
+        await _unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await _unitOfWorkMock.Received(1).CommitAsync();
+        await _validatorMock.Received(1).ValidateAsync(requestDto);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnNotFound_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var productId = 999;
+        var requestProductDto = new RequestProductDto
+        {
+            Title = "NonExistent Product",
+            Price = 100.00m,
+            Description = "Non-existent description",
+            Category = "NonExistentCategory",
+            Image = "nonexistent.jpg"
+        };
+
+        var validationResult = new FluentValidation.Results.ValidationResult(); // Sem erros de validação
+        _validatorMock.ValidateAsync(requestProductDto, Arg.Any<CancellationToken>())
+                      .Returns(validationResult);
+
+        _productRepositoryMock.GetByIdAsync(productId).Returns((Product?)null);
+
+        // Act
+        var response = await _productService.UpdateAsync(productId, requestProductDto);
+
+        // Assert
+        response.Should().NotBeNull("O resultado não deve ser nulo");
+        response.IsSuccess.Should().BeFalse("Deve ser falha");
+        response.StatusCode.Should().Be(404, "O status HTTP deve ser 404 para recursos não encontrados");
+        response.Message.Should().Be($"Produto com o ID {productId} não encontrado.");
+
+        // Verify
+        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
+        _mapperMock.DidNotReceive().Map(requestProductDto, Arg.Any<Product>());
+        await _productRepositoryMock.DidNotReceive().UpdateAsync(Arg.Any<Product>());
         await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
         await _unitOfWorkMock.DidNotReceive().CommitAsync();
     }
