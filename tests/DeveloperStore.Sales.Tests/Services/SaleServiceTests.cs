@@ -449,5 +449,4 @@ public class SaleServiceTests
             e.CancelledDate <= DateTime.UtcNow
         ));
     }
-
 }
