@@ -85,53 +85,6 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnPagedResponse_WhenProductsExist()
-    {
-        // Arrange
-        var mockProducts = new List<Product>
-        {
-            new Product { Id = 1, Title = "Product A", Price = 10.99m },
-            new Product { Id = 2, Title = "Product B", Price = 20.99m },
-        };
-
-        var mockQueryable = new TestAsyncEnumerable<Product>(mockProducts.AsQueryable());
-        _unitOfWorkMock.ProductRepository.GetAllQueryable().Returns(mockQueryable);
-
-        _mapperMock
-            .Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>())
-            .Returns(mockProducts.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Price = p.Price
-            }).ToList());
-
-        // Act
-        var result = await _productService.GetAllAsync(1, 10, null);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data?.Data.Count());
-    }
-
-    [Fact]
-    public async Task GetAllAsync_ShouldReturnNotFound_WhenNoProductsExist()
-    {
-        // Arrange
-        _unitOfWorkMock.ProductRepository.GetAllQueryable()
-            .Returns(new TestAsyncEnumerable<Product>(Enumerable.Empty<Product>().AsQueryable()));
-
-        // Act
-        var result = await _productService.GetAllAsync(1, 10, null);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.False(result.IsSuccess); 
-        Assert.Equal(404, result.StatusCode); 
-        Assert.Equal("Nenhum produto encontrado.", result.Message); 
-    }
-
-    [Fact]
     public async Task GetByCategoryAsync_ShouldReturnPagedResponse_WhenProductsExist()
     {
         // Arrange
@@ -434,6 +387,87 @@ public class ProductServiceTests
         await _unitOfWorkMock.ProductRepository.Received(1).AddAsync(createdProduct);
         await _unitOfWorkMock.Received(1).BeginTransactionAsync();
         await _unitOfWorkMock.Received(1).CommitAsync();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnPagedResponse_WhenProductsExist()
+    {
+        // Arrange
+        var mockProducts = new List<Product>
+        {
+            new Product { Id = 1, Title = "Product A", Price = 10.99m, Category = "Category A" },
+            new Product { Id = 2, Title = "Product B", Price = 20.99m, Category = "Category B" },
+            new Product { Id = 3, Title = "Product C", Price = 15.50m, Category = "Category A" }
+        };
+
+        var filters = new Dictionary<string, string>
+        {
+            { "category", "Category A" }, 
+            { "title", "Product*" }      
+        };
+
+        var filteredProducts = mockProducts
+            .Where(p => p.Category == "Category A" && p.Title.StartsWith("Product"))
+            .OrderByDescending(p => p.Price) 
+            .Skip(0) 
+            .Take(2)
+            .ToList();
+
+        var mockQueryable = new TestAsyncEnumerable<Product>(filteredProducts.AsQueryable());
+        _unitOfWorkMock.ProductRepository.GetAllQueryable().Returns(mockQueryable);
+
+        _mapperMock
+            .Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>())
+            .Returns(filteredProducts.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Price = p.Price,
+                Category = p.Category
+            }).ToList());
+
+        // Act
+        var result = await _productService.GetAllAsync(1, 2, "price desc", filters);
+
+        // Assert
+        result.Should().NotBeNull("O resultado não deve ser nulo");
+        result.IsSuccess.Should().BeTrue("A operação deve ser bem-sucedida");
+        result.StatusCode.Should().Be(200, "O status HTTP deve ser 200");
+        result.Data.Should().NotBeNull("Os dados não devem ser nulos");
+        result.Data!.Data.Should().HaveCount(2, "Devem ser retornados dois produtos devido à paginação");
+        result.Data!.Data.First().Price.Should().Be(15.50m, "O produto com o maior preço deve vir primeiro devido à ordenação decrescente");
+
+        // Verify 
+        _unitOfWorkMock.ProductRepository.Received(1).GetAllQueryable();
+        _mapperMock.Received(1).Map<IEnumerable<ProductDto>>(
+            Arg.Is<IEnumerable<Product>>(x => x.Count() == 2));
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnNotFound_WhenNoProductsMatchFilters()
+    {
+        // Arrange
+        var filters = new Dictionary<string, string>
+        {
+            { "category", "NonExistentCategory" }, // Invalid category
+            { "title", "NonExistentProduct" }      // Invalid title
+        };
+
+        _unitOfWorkMock.ProductRepository.GetAllQueryable()
+            .Returns(new TestAsyncEnumerable<Product>(Enumerable.Empty<Product>().AsQueryable()));
+
+        // Act
+        var result = await _productService.GetAllAsync(1, 10, null, filters);
+
+        // Assert
+        result.Should().NotBeNull("O resultado não deve ser nulo");
+        result.IsSuccess.Should().BeFalse("A operação deve falhar");
+        result.StatusCode.Should().Be(404, "O status HTTP deve ser 404 para nenhuma correspondência");
+        result.Message.Should().Be("Nenhum produto encontrado.");
+
+        // Verify
+        _unitOfWorkMock.ProductRepository.Received(1).GetAllQueryable();
+        _mapperMock.DidNotReceive().Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>());
     }
 
 }
