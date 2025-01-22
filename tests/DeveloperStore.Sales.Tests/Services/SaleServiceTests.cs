@@ -392,4 +392,139 @@ public class SaleServiceTests
             e.NewTotalAmount == 210
         ));
     }
+
+    [Fact]
+    public async Task CancelSaleItemAsync_ShouldRemoveItemAndUpdateSale_WhenItemExists()
+    {
+        // Arrange
+        var saleId = 1;
+        var itemId = 2;
+
+        var sale = new Sale
+        {
+            Id = saleId,
+            SaleNumber = "12345",
+            SaleDate = DateTime.UtcNow.AddDays(-1),
+            CustomerId = 1,
+            Branch = "Original Branch",
+            TotalAmount = 200,
+            Items = new List<SaleItem>
+        {
+            new SaleItem { Id = 1, ProductId = 1, Quantity = 2, UnitPrice = 50, Discount = 0, TotalAmount = 100 },
+            new SaleItem { Id = itemId, ProductId = 2, Quantity = 2, UnitPrice = 50, Discount = 0, TotalAmount = 100 }
+        }
+        };
+
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns(sale);
+
+        Sale capturedSale = null;
+        _unitOfWorkMock.SaleRepository
+            .When(x => x.UpdateAsync(Arg.Any<Sale>()))
+            .Do(callInfo => {
+                capturedSale = callInfo.Arg<Sale>();
+            });
+
+        // Act
+        var result = await _saleService.CancelSaleItemAsync(saleId, itemId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(200);
+        result.Message.Should().Be($"Item {itemId} da venda {sale.SaleNumber} foi cancelado com sucesso.");
+
+        capturedSale.Should().NotBeNull();
+        capturedSale.Items.Should().HaveCount(1); 
+        capturedSale.Items.Should().NotContain(i => i.Id == itemId);
+        capturedSale.TotalAmount.Should().Be(100); 
+
+        await _mediatorMock.Received(1).Publish(Arg.Is<ItemCancelledEvent>(e =>
+            e.SaleId == saleId &&
+            e.SaleNumber == sale.SaleNumber &&
+            e.ItemId == itemId &&
+            e.ProductId == 2 &&
+            e.Quantity == 2 &&
+            e.UnitPrice == 50 &&
+            e.TotalAmount == 100 &&
+            e.CancelledDate <= DateTime.UtcNow
+        ));
+    }
+
+    [Fact]
+    public async Task CheckoutCartAsync_ShouldCreateSaleAndPublishEvent_WhenCartIsValid()
+    {
+        // Arrange
+        var cartId = 1;
+
+        var cart = new Cart
+        {
+            Id = cartId,
+            UserId = 123,
+            CartProducts = new List<CartProduct>
+        {
+            new CartProduct { ProductId = 1, Quantity = 2 },
+            new CartProduct { ProductId = 2, Quantity = 3 }
+        }
+        };
+
+        var products = new List<Product>
+    {
+        new Product { Id = 1, Price = 50 },
+        new Product { Id = 2, Price = 30 }
+    };
+
+        var cartTotal = 50 * 2 + 30 * 3; // Total = 190
+
+        _unitOfWorkMock.CartRepository.GetByIdAsync(cartId).Returns(cart);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(Arg.Is<int>(id => id == 1)).Returns(products[0]);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(Arg.Is<int>(id => id == 2)).Returns(products[1]);
+
+        Sale capturedSale = null;
+        _unitOfWorkMock.SaleRepository
+            .When(x => x.AddAsync(Arg.Any<Sale>()))
+            .Do(callInfo => {
+                capturedSale = callInfo.Arg<Sale>();
+            });
+
+        _mapperMock.Map<SaleDto>(Arg.Any<Sale>()).Returns(new SaleDto
+        {
+            Id = 1,
+            SaleNumber = "12345",
+            SaleDate = DateTime.UtcNow,
+            CustomerId = cart.UserId,
+            Branch = "Default Branch",
+            TotalAmount = cartTotal,
+            Items = new List<SaleItemDto>
+        {
+            new SaleItemDto { ProductId = 1, Quantity = 2, UnitPrice = 50, TotalAmount = 100 },
+            new SaleItemDto { ProductId = 2, Quantity = 3, UnitPrice = 30, TotalAmount = 90 }
+        }
+        });
+
+        // Act
+        var result = await _saleService.CheckoutCartAsync(cartId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(201);
+        result.Message.Should().Be("Resource created successfully");
+        result.Data.Should().NotBeNull();
+
+        capturedSale.Should().NotBeNull();
+        capturedSale.CustomerId.Should().Be(cart.UserId);
+        capturedSale.Branch.Should().Be("Default Branch");
+        capturedSale.TotalAmount.Should().Be(cartTotal);
+        capturedSale.Items.Should().HaveCount(2);
+
+        capturedSale.Items.Should().ContainSingle(i => i.ProductId == 1 && i.Quantity == 2 && i.TotalAmount == 100);
+        capturedSale.Items.Should().ContainSingle(i => i.ProductId == 2 && i.Quantity == 3 && i.TotalAmount == 90);
+
+        await _mediatorMock.Received(1).Publish(Arg.Is<SaleCreatedEvent>(e =>
+            e.SaleId == capturedSale.Id &&
+            e.SaleNumber == capturedSale.SaleNumber &&
+            e.CustomerId == capturedSale.CustomerId &&
+            e.TotalAmount == capturedSale.TotalAmount
+        ));
+    }
 }
