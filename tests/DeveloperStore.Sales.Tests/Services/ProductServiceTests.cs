@@ -13,7 +13,6 @@ namespace DeveloperStore.Sales.Tests.Services;
 
 public class ProductServiceTests
 {
-    private readonly IProductRepository _productRepositoryMock;
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly IMapper _mapperMock;
     private readonly IProductService _productService;
@@ -21,11 +20,10 @@ public class ProductServiceTests
 
     public ProductServiceTests()
     {
-        _productRepositoryMock = Substitute.For<IProductRepository>();
         _unitOfWorkMock = Substitute.For<IUnitOfWork>();
         _mapperMock = Substitute.For<IMapper>();
         _validatorMock = Substitute.For<IValidator<RequestProductDto>>();
-        _productService = new ProductService(_productRepositoryMock, _mapperMock, _validatorMock, _unitOfWorkMock);
+        _productService = new ProductService(_mapperMock, _validatorMock, _unitOfWorkMock);
     }
 
     [Fact]
@@ -54,7 +52,7 @@ public class ProductServiceTests
             Rating = new ProductRating { Rate = product.Rating.Rate, Count = product.Rating.Count }
         };
 
-        _productRepositoryMock.GetByIdAsync(productId).Returns(product);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns(product);
         _mapperMock.Map<ProductDto>(product).Returns(productDto);
 
         // Act
@@ -74,7 +72,7 @@ public class ProductServiceTests
     {
         // Arrange
         var productId = 999; 
-        _productRepositoryMock.GetByIdAsync(productId).Returns((Product?)null);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns((Product?)null);
 
         // Act
         var response = await _productService.GetByIdAsync(productId);
@@ -97,7 +95,7 @@ public class ProductServiceTests
         };
 
         var mockQueryable = new TestAsyncEnumerable<Product>(mockProducts.AsQueryable());
-        _productRepositoryMock.GetAllQueryable().Returns(mockQueryable);
+        _unitOfWorkMock.ProductRepository.GetAllQueryable().Returns(mockQueryable);
 
         _mapperMock
             .Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>())
@@ -120,7 +118,7 @@ public class ProductServiceTests
     public async Task GetAllAsync_ShouldReturnNotFound_WhenNoProductsExist()
     {
         // Arrange
-        _productRepositoryMock.GetAllQueryable()
+        _unitOfWorkMock.ProductRepository.GetAllQueryable()
             .Returns(new TestAsyncEnumerable<Product>(Enumerable.Empty<Product>().AsQueryable()));
 
         // Act
@@ -157,7 +155,7 @@ public class ProductServiceTests
 
         var mockQueryable = new TestAsyncEnumerable<Product>(mockProducts.AsQueryable());
 
-        _productRepositoryMock.GetAllQueryable().Returns(mockQueryable);
+        _unitOfWorkMock.ProductRepository.GetAllQueryable().Returns(mockQueryable);
 
         _mapperMock
             .Map<List<ProductDto>>(Arg.Is<IEnumerable<Product>>(x => x.SequenceEqual(mockProducts)))
@@ -177,7 +175,7 @@ public class ProductServiceTests
             Arg.Is<IEnumerable<Product>>(x => x.SequenceEqual(mockProducts))
         );
 
-        _productRepositoryMock.Received(1).GetAllQueryable();
+        _unitOfWorkMock.ProductRepository.Received(1).GetAllQueryable();
     }
 
     [Fact]
@@ -189,7 +187,7 @@ public class ProductServiceTests
         var size = 10;
 
         var emptyQueryable = new TestAsyncEnumerable<Product>(Enumerable.Empty<Product>().AsQueryable());
-        _productRepositoryMock.GetAllQueryable().Returns(emptyQueryable);
+        _unitOfWorkMock.ProductRepository.GetAllQueryable().Returns(emptyQueryable);
 
         // Act
         var result = await _productService.GetByCategoryAsync(category, page, size, null);
@@ -200,7 +198,7 @@ public class ProductServiceTests
         result.StatusCode.Should().Be(404); 
         result.Message.Should().Be($"Nenhum produto encontrado na categoria '{category}'.");
 
-        _productRepositoryMock.Received(1).GetAllQueryable();
+        _unitOfWorkMock.ProductRepository.Received(1).GetAllQueryable();
         _mapperMock.DidNotReceive().Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>());
     }
 
@@ -222,7 +220,7 @@ public class ProductServiceTests
         result.Message.Should().Be("A categoria não pode ser nula ou vazia.");
 
         // Verify
-        _productRepositoryMock.DidNotReceive().GetAllQueryable();
+        _unitOfWorkMock.ProductRepository.DidNotReceive().GetAllQueryable();
         _mapperMock.DidNotReceive().Map<IEnumerable<ProductDto>>(Arg.Any<IEnumerable<Product>>());
     }
 
@@ -240,7 +238,7 @@ public class ProductServiceTests
             Category = "TestCategory"
         };
 
-        _productRepositoryMock.GetByIdAsync(productId).Returns(existingProduct);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns(existingProduct);
 
         // Act
         var response = await _productService.DeleteAsync(productId);
@@ -252,8 +250,8 @@ public class ProductServiceTests
         response.Message.Should().Be($"Produto com o ID {productId} excluído com sucesso.");
 
         // Verify 
-        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
-        await _productRepositoryMock.Received(1).DeleteAsync(existingProduct);
+        await _unitOfWorkMock.ProductRepository.Received(1).GetByIdAsync(productId);
+        await _unitOfWorkMock.ProductRepository.Received(1).DeleteAsync(existingProduct);
         await _unitOfWorkMock.Received(1).BeginTransactionAsync();
         await _unitOfWorkMock.Received(1).CommitAsync();
     }
@@ -263,7 +261,7 @@ public class ProductServiceTests
     {
         // Arrange
         var productId = 999;
-        _productRepositoryMock.GetByIdAsync(productId).Returns((Product?)null);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns((Product?)null);
 
         // Act
         var response = await _productService.DeleteAsync(productId);
@@ -275,8 +273,8 @@ public class ProductServiceTests
         response.Message.Should().Be($"Produto com o ID {productId} não encontrado.");
 
         // Verify 
-        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
-        await _productRepositoryMock.DidNotReceive().DeleteAsync(Arg.Any<Product>());
+        await _unitOfWorkMock.ProductRepository.Received(1).GetByIdAsync(productId);
+        await _unitOfWorkMock.ProductRepository.DidNotReceive().DeleteAsync(Arg.Any<Product>());
         await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
         await _unitOfWorkMock.DidNotReceive().CommitAsync();
     }
@@ -307,7 +305,7 @@ public class ProductServiceTests
 
         var validationResult = new FluentValidation.Results.ValidationResult();
 
-        _productRepositoryMock.GetByIdAsync(productId).Returns(existingProduct);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns(existingProduct);
         _validatorMock.ValidateAsync(requestDto).Returns(validationResult);
 
         var updatedProductDto = new ProductDto
@@ -333,8 +331,8 @@ public class ProductServiceTests
         response.Data.Should().BeEquivalentTo(updatedProductDto, "Os dados retornados devem corresponder ao produto atualizado");
 
         // Verify
-        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
-        await _productRepositoryMock.Received(1).UpdateAsync(existingProduct);
+        await _unitOfWorkMock.ProductRepository.Received(1).GetByIdAsync(productId);
+        await _unitOfWorkMock.ProductRepository.Received(1).UpdateAsync(existingProduct);
         await _unitOfWorkMock.Received(1).BeginTransactionAsync();
         await _unitOfWorkMock.Received(1).CommitAsync();
         await _validatorMock.Received(1).ValidateAsync(requestDto);
@@ -358,7 +356,7 @@ public class ProductServiceTests
         _validatorMock.ValidateAsync(requestProductDto, Arg.Any<CancellationToken>())
                       .Returns(validationResult);
 
-        _productRepositoryMock.GetByIdAsync(productId).Returns((Product?)null);
+        _unitOfWorkMock.ProductRepository.GetByIdAsync(productId).Returns((Product?)null);
 
         // Act
         var response = await _productService.UpdateAsync(productId, requestProductDto);
@@ -370,9 +368,9 @@ public class ProductServiceTests
         response.Message.Should().Be($"Produto com o ID {productId} não encontrado.");
 
         // Verify
-        await _productRepositoryMock.Received(1).GetByIdAsync(productId);
+        await _unitOfWorkMock.ProductRepository.Received(1).GetByIdAsync(productId);
         _mapperMock.DidNotReceive().Map(requestProductDto, Arg.Any<Product>());
-        await _productRepositoryMock.DidNotReceive().UpdateAsync(Arg.Any<Product>());
+        await _unitOfWorkMock.ProductRepository.DidNotReceive().UpdateAsync(Arg.Any<Product>());
         await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
         await _unitOfWorkMock.DidNotReceive().CommitAsync();
     }
@@ -394,7 +392,7 @@ public class ProductServiceTests
         var validationResult = new FluentValidation.Results.ValidationResult(); // Sem erros de validação
         _validatorMock.ValidateAsync(requestDto, Arg.Any<CancellationToken>()).Returns(validationResult);
 
-        _productRepositoryMock.ExistsByTitleAsync(requestDto.Title).Returns(false);
+        _unitOfWorkMock.ProductRepository.ExistsByTitleAsync(requestDto.Title).Returns(false);
 
         var createdProduct = new Product
         {
@@ -432,8 +430,8 @@ public class ProductServiceTests
 
         // Verify
         await _validatorMock.Received(1).ValidateAsync(requestDto, Arg.Any<CancellationToken>());
-        await _productRepositoryMock.Received(1).ExistsByTitleAsync(requestDto.Title);
-        await _productRepositoryMock.Received(1).AddAsync(createdProduct);
+        await _unitOfWorkMock.ProductRepository.Received(1).ExistsByTitleAsync(requestDto.Title);
+        await _unitOfWorkMock.ProductRepository.Received(1).AddAsync(createdProduct);
         await _unitOfWorkMock.Received(1).BeginTransactionAsync();
         await _unitOfWorkMock.Received(1).CommitAsync();
     }

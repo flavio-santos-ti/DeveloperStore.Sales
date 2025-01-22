@@ -4,28 +4,24 @@ using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Extensions;
 using DeveloperStore.Sales.Service.Interfaces;
+using DeveloperStore.Sales.Storage.Extensions;
 using DeveloperStore.Sales.Storage.Interfaces;
 using FluentValidation;
-using DeveloperStore.Sales.Storage.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Service.Services;
 
 public class CartService : ICartService
 {
-    private readonly ICartRepository _cartRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IValidator<RequestCartDto> _validator;
-    private readonly ICartProductRepository _cartProductRepository;
 
-    public CartService(ICartRepository cartRepository, IUnitOfWork unitOfWork, IMapper mapper, IValidator<RequestCartDto> validator, ICartProductRepository cartProductRepository)
+    public CartService(IUnitOfWork unitOfWork, IMapper mapper, IValidator<RequestCartDto> validator)
     {
-        _cartRepository = cartRepository ?? throw new ArgumentNullException(nameof(cartRepository));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-        _cartProductRepository = cartProductRepository ?? throw new ArgumentNullException(nameof(cartProductRepository));
     }
 
     public async Task<ApiResponseDto<CartDto>> CreateAsync(RequestCartDto dto)
@@ -46,7 +42,7 @@ public class CartService : ICartService
                 Date = dto.Date,
             };
 
-            await _cartRepository.AddAsync(cart);
+            await _unitOfWork.CartRepository.AddAsync(cart);
             await _unitOfWork.SaveChangesAsync(); 
             
             foreach (var product in dto.Products)
@@ -58,7 +54,7 @@ public class CartService : ICartService
                     Quantity = product.Quantity
                 };
 
-                await _cartProductRepository.AddAsync(cartProduct);
+                await _unitOfWork.CartProductRepository.AddAsync(cartProduct);
             }
 
             await _unitOfWork.CommitAsync();
@@ -82,7 +78,7 @@ public class CartService : ICartService
         if (!validationResult.IsValid)
             return validationResult.ToApiResponse<CartDto>();
 
-        var existingCart = await _cartRepository.GetByIdAsync(id);
+        var existingCart = await _unitOfWork.CartRepository.GetByIdAsync(id);
         if (existingCart == null)
             return ApiResponseDto<CartDto>.AsNotFound($"Carrinho com ID {id} não encontrado.");
 
@@ -92,12 +88,12 @@ public class CartService : ICartService
             existingCart.UserId = dto.UserId;
             existingCart.Date = dto.Date;
 
-            var existingProducts = await _cartProductRepository.GetByCartIdAsync(id);
+            var existingProducts = await _unitOfWork.CartProductRepository.GetByCartIdAsync(id);
 
             var productsToRemove = existingProducts.Where(ep => !dto.Products.Any(dp => dp.ProductId == ep.ProductId)).ToList();
             foreach (var product in productsToRemove)
             {
-                await _cartProductRepository.DeleteAsync(product);
+                await _unitOfWork.CartProductRepository.DeleteAsync(product);
             }
 
             foreach (var product in dto.Products)
@@ -105,8 +101,8 @@ public class CartService : ICartService
                 var existingProduct = existingProducts.FirstOrDefault(ep => ep.ProductId == product.ProductId);
                 if (existingProduct != null)
                 {
-                    existingProduct.Quantity = product.Quantity; 
-                    await _cartProductRepository.UpdateAsync(existingProduct);
+                    existingProduct.Quantity = product.Quantity;
+                    await _unitOfWork.CartProductRepository.UpdateAsync(existingProduct);
                 }
                 else
                 {
@@ -116,14 +112,37 @@ public class CartService : ICartService
                         ProductId = product.ProductId,
                         Quantity = product.Quantity
                     };
-                    await _cartProductRepository.AddAsync(newCartProduct);
+                    await _unitOfWork.CartProductRepository.AddAsync(newCartProduct);
                 }
             }
 
+            // Atualiza o estado do CartProducts
+            existingCart.CartProducts = existingProducts
+                .Where(ep => !productsToRemove.Any(p => p.ProductId == ep.ProductId))
+                .Concat(dto.Products
+                    .Where(dp => !existingProducts.Any(ep => ep.ProductId == dp.ProductId))
+                    .Select(dp => new CartProduct
+                    {
+                        ProductId = dp.ProductId,
+                        Quantity = dp.Quantity,
+                        CartId = id
+                    }))
+                .ToList();
+
+            // Atualiza as quantidades dos produtos existentes
+            foreach (var product in dto.Products)
+            {
+                var existingProduct = existingCart.CartProducts.FirstOrDefault(cp => cp.ProductId == product.ProductId);
+                if (existingProduct != null)
+                {
+                    existingProduct.Quantity = product.Quantity;
+                }
+            }
+
+            await _unitOfWork.CartRepository.UpdateAsync(existingCart);
             await _unitOfWork.CommitAsync();
 
-            var updatedCart = await _cartRepository.GetByIdAsync(id);
-            var cartDto = _mapper.Map<CartDto>(updatedCart);
+            var cartDto = _mapper.Map<CartDto>(existingCart);
             return ApiResponseDto<CartDto>.AsSuccess(cartDto);
         }
         catch (Exception ex)
@@ -135,7 +154,7 @@ public class CartService : ICartService
 
     public async Task<ApiResponseDto<string>> DeleteAsync(int id)
     {
-        var existingCart = await _cartRepository.GetByIdAsync(id);
+        var existingCart = await _unitOfWork.CartRepository.GetByIdAsync(id);
         if (existingCart == null)
             return ApiResponseDto<string>.AsNotFound($"Carrinho com ID {id} não encontrado.");
 
@@ -143,7 +162,7 @@ public class CartService : ICartService
         try
         {
             // Excluindo o carrinho
-            await _cartRepository.DeleteAsync(existingCart);
+            await _unitOfWork.CartRepository.DeleteAsync(existingCart);
             await _unitOfWork.CommitAsync();
 
             return ApiResponseDto<string>.AsSuccess($"Carrinho com ID {id} excluído com sucesso.");
@@ -157,11 +176,11 @@ public class CartService : ICartService
 
     public async Task<ApiResponseDto<CartDto>> GetByIdAsync(int id)
     {
-        var existingCart = await _cartRepository.GetByIdAsync(id);
+        var existingCart = await _unitOfWork.CartRepository.GetByIdAsync(id);
         if (existingCart == null)
             return ApiResponseDto<CartDto>.AsNotFound($"Carrinho com ID {id} não encontrado.");
 
-        var products = await _cartProductRepository.GetByCartIdAsync(id);
+        var products = await _unitOfWork.CartProductRepository.GetByCartIdAsync(id);
         var cartDto = _mapper.Map<CartDto>(existingCart);
 
         cartDto.Products = products.Select(p => new CartProductDto
@@ -177,7 +196,7 @@ public class CartService : ICartService
     {
         try
         {
-            var query = _cartRepository.GetAllQueryable();
+            var query = _unitOfWork.CartRepository.GetAllQueryable();
 
             // Aplicar ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(order))

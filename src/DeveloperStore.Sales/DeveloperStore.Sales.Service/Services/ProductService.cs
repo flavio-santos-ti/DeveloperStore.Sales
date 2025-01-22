@@ -13,14 +13,12 @@ namespace DeveloperStore.Sales.Service.Services;
 
 public class ProductService : IProductService
 {
-    private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
     private readonly IValidator<RequestProductDto> _validator;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ProductService(IProductRepository productRepository, IMapper mapper, IValidator<RequestProductDto> validator, IUnitOfWork unitOfWork)
+    public ProductService( IMapper mapper, IValidator<RequestProductDto> validator, IUnitOfWork unitOfWork)
     {
-        _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -35,7 +33,7 @@ public class ProductService : IProductService
         if (!validationResult.IsValid)
             return validationResult.ToApiResponse<ProductDto>();
 
-        var existingProduct = await _productRepository.ExistsByTitleAsync(dto.Title);
+        var existingProduct = await _unitOfWork.ProductRepository.ExistsByTitleAsync(dto.Title);
         if (existingProduct)
             return ApiResponseDto<ProductDto>.AsBadRequest("Já existe um produto com o mesmo título.");
 
@@ -44,7 +42,7 @@ public class ProductService : IProductService
         {
             var product = _mapper.Map<Product>(dto);
 
-            await _productRepository.AddAsync(product);
+            await _unitOfWork.ProductRepository.AddAsync(product);
 
             await _unitOfWork.CommitAsync();
 
@@ -70,7 +68,7 @@ public class ProductService : IProductService
             return valResult.ToApiResponse<ProductDto>();
         }
 
-        var existingProduct = await _productRepository.GetByIdAsync(id);
+        var existingProduct = await _unitOfWork.ProductRepository.GetByIdAsync(id);
         if (existingProduct == null)
             return ApiResponseDto<ProductDto>.AsNotFound($"Produto com o ID {id} não encontrado.");
 
@@ -78,7 +76,7 @@ public class ProductService : IProductService
         try
         {
             _mapper.Map(dto, existingProduct);
-            await _productRepository.UpdateAsync(existingProduct);
+            await _unitOfWork.ProductRepository.UpdateAsync(existingProduct);
 
             await _unitOfWork.CommitAsync();
 
@@ -96,14 +94,14 @@ public class ProductService : IProductService
 
     public async Task<ApiResponseDto<ProductDto>> DeleteAsync(int id)
     {
-        var existingProduct = await _productRepository.GetByIdAsync(id);
+        var existingProduct = await _unitOfWork.ProductRepository.GetByIdAsync(id);
         if (existingProduct == null)
             return ApiResponseDto<ProductDto>.AsNotFound($"Produto com o ID {id} não encontrado.");
 
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            await _productRepository.DeleteAsync(existingProduct);
+            await _unitOfWork.ProductRepository.DeleteAsync(existingProduct);
 
             await _unitOfWork.CommitAsync();
 
@@ -120,7 +118,7 @@ public class ProductService : IProductService
     {
         try
         {
-            var query = _productRepository.GetAllQueryable().AsNoTracking();
+            var query = _unitOfWork.ProductRepository.GetAllQueryable().AsNoTracking();
             
             // Ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(order))
@@ -190,7 +188,7 @@ public class ProductService : IProductService
             if (string.IsNullOrWhiteSpace(category))
                 return ApiResponseDto<PagedResponseDto<ProductDto>>.AsBadRequest("A categoria não pode ser nula ou vazia.");
 
-            var query = _productRepository.GetAllQueryable()
+            var query = _unitOfWork.ProductRepository.GetAllQueryable()
                 .Where(p => p.Category.ToLower() == category.ToLower());
 
             if (!string.IsNullOrWhiteSpace(order))
@@ -255,7 +253,7 @@ public class ProductService : IProductService
             if (id <= 0)
                 return ApiResponseDto<ProductDto>.AsBadRequest("O ID do produto deve ser maior que zero.");
 
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
 
             if (product == null)
                 return ApiResponseDto<ProductDto>.AsNotFound($"Produto com o ID {id} não encontrado.");

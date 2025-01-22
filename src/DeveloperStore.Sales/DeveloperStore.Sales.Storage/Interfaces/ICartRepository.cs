@@ -8,4 +8,5 @@ public interface ICartRepository
     Task<Cart?> GetByIdAsync(int id);
     Task DeleteAsync(Cart cart);
     IQueryable<Cart> GetAllQueryable();
+    Task UpdateAsync(Cart cart);
 }
