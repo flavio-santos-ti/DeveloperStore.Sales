@@ -51,9 +51,13 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int _page = 1, [FromQuery] int _size = 10, [FromQuery] string? _order = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int _page = 1,
+        [FromQuery] int _size = 10,
+        [FromQuery] string? _order = null,
+        [FromQuery] Dictionary<string, string>? filters = null)
     {
-        var response = await _productService.GetAllAsync(_page, _size, _order);
+        var response = await _productService.GetAllAsync(_page, _size, _order, filters);
 
         if (response.IsSuccess)
             return StatusCode(response.StatusCode, response.Data);

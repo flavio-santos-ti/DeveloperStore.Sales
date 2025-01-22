@@ -114,12 +114,48 @@ public class ProductService : IProductService
         }
     }
 
-    public async Task<ApiResponseDto<PagedResponseDto<ProductDto>>> GetAllAsync(int page = 1, int size = 10, string? order = null)
+    public async Task<ApiResponseDto<PagedResponseDto<ProductDto>>> GetAllAsync(
+        int page = 1,
+        int size = 10,
+        string? order = null,
+        Dictionary<string, string>? filters = null)
     {
         try
         {
             var query = _unitOfWork.ProductRepository.GetAllQueryable().AsNoTracking();
-            
+
+            // Aplicar filtros
+            if (filters != null)
+            {
+                foreach (var filter in filters)
+                {
+                    var field = filter.Key.ToLower();
+                    var value = filter.Value;
+
+                    // Suporte para correspondência parcial
+                    if (value.StartsWith("*") || value.EndsWith("*"))
+                    {
+                        var trimmedValue = value.Trim('*').ToLower();
+                        query = field switch
+                        {
+                            "title" => query.Where(p => p.Title.ToLower().Contains(trimmedValue)),
+                            "category" => query.Where(p => p.Category.ToLower().Contains(trimmedValue)),
+                            _ => query // Ignorar filtros inválidos
+                        };
+                    }
+                    else
+                    {
+                        query = field switch
+                        {
+                            "title" => query.Where(p => p.Title.ToLower() == value.ToLower()),
+                            "category" => query.Where(p => p.Category.ToLower() == value.ToLower()),
+                            "price" => decimal.TryParse(value, out var price) ? query.Where(p => p.Price == price) : query,
+                            _ => query // Ignorar filtros inválidos
+                        };
+                    }
+                }
+            }
+
             // Ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(order))
             {
@@ -150,6 +186,7 @@ public class ProductService : IProductService
                 }
             }
 
+            // Paginação
             var totalItems = await query.CountAsync();
             var products = await query
                 .Skip((page - 1) * size)
@@ -157,8 +194,11 @@ public class ProductService : IProductService
                 .ToListAsync();
 
             if (!products.Any())
+            {
                 return ApiResponseDto<PagedResponseDto<ProductDto>>.AsNotFound("Nenhum produto encontrado.");
+            }
 
+            // Mapear para DTO
             var productDtos = _mapper.Map<IEnumerable<ProductDto>>(products);
 
             var pagedResponse = new PagedResponseDto<ProductDto>(
@@ -169,7 +209,6 @@ public class ProductService : IProductService
             );
 
             return ApiResponseDto<PagedResponseDto<ProductDto>>.AsSuccess(pagedResponse);
-
         }
         catch (Exception ex)
         {
