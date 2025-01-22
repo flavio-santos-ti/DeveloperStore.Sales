@@ -9,4 +9,5 @@ public interface ISaleService
     Task<ApiResponseDto<string>> CancelSaleAsync(int saleId);
     Task<ApiResponseDto<string>> UpdateSaleAsync(int saleId, RequestSaleDto dto);
     Task<ApiResponseDto<string>> CancelSaleItemAsync(int saleId, int itemId);
+    Task<ApiResponseDto<SaleDto>> CheckoutCartAsync(int cartId);
 }
