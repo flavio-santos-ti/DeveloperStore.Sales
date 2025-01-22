@@ -36,4 +36,10 @@ public class CartRepository : ICartRepository
     {
         return _context.Carts.Include(c => c.CartProducts); // Inclui os produtos do carrinho
     }
+
+    public async Task UpdateAsync(Cart cart)
+    {
+        _context.Carts.Update(cart);
+        await Task.CompletedTask;
+    }
 }
