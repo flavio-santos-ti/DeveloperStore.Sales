@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Dtos.Sale;
-using DeveloperStore.Sales.Domain.Dtos.Sarle;
 using DeveloperStore.Sales.Domain.Events;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Interfaces;
@@ -37,8 +36,10 @@ public class SaleService : ISaleService
         if (dto == null || !dto.Items.Any())
             return ApiResponseDto<SaleDto>.AsBadRequest("A venda deve conter pelo menos um item.");
 
-        await _unitOfWork.BeginTransactionAsync();
+        if (dto.Items.Any(item => item.Quantity > 20))
+            return ApiResponseDto<SaleDto>.AsBadRequest("Não é permitido vender mais de 20 itens idênticos.");
 
+        await _unitOfWork.BeginTransactionAsync();
         try
         {
             var sale = new Sale
@@ -47,30 +48,30 @@ public class SaleService : ISaleService
                 SaleDate = DateTime.UtcNow,
                 CustomerId = dto.CustomerId,
                 Branch = dto.Branch,
-                TotalAmount = 0
+                TotalAmount = dto.Items.Sum(item =>
+                {
+                    var discount = CalculateDiscount(item.Quantity, item.UnitPrice);
+                    return item.Quantity * (item.UnitPrice - discount);
+                })
             };
 
-            foreach (var item in dto.Items)
+            sale.Items = dto.Items.Select(item =>
             {
-                if (item.Quantity > 20)
-                    throw new InvalidOperationException("Não é permitido vender mais de 20 itens idênticos.");
-
                 var discount = CalculateDiscount(item.Quantity, item.UnitPrice);
-                var totalAmount = item.Quantity * (item.UnitPrice - discount);
-
-                sale.Items.Add(new SaleItem
+                return new SaleItem
                 {
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                     Discount = discount,
-                    TotalAmount = totalAmount
-                });
+                    TotalAmount = item.Quantity * (item.UnitPrice - discount)
+                };
+            }).ToList();
 
-                sale.TotalAmount += totalAmount;
-            }
+            // Usar uma variável local para o repositório
+            var saleRepository = _unitOfWork.SaleRepository;
+            await saleRepository.AddAsync(sale);
 
-            await _unitOfWork.SaleRepository.AddAsync(sale);
             await _unitOfWork.CommitAsync();
 
             var saleCreatedEvent = new SaleCreatedEvent(sale.Id, sale.SaleNumber, sale.SaleDate, sale.CustomerId, sale.TotalAmount);
@@ -82,7 +83,7 @@ public class SaleService : ISaleService
         catch (Exception ex)
         {
             await _unitOfWork.RollbackAsync();
-            return ApiResponseDto<SaleDto>.AsInternalServerError($"Erro ao criar venda: {ex.Message}");
+            return ApiResponseDto<SaleDto>.AsInternalServerError($"Ocorreu um erro ao processar a venda: {ex.Message}");
         }
     }
 
@@ -230,7 +231,7 @@ public class SaleService : ISaleService
         var cart = await _unitOfWork.CartRepository.GetByIdAsync(cartId);
         if (cart == null || !cart.CartProducts.Any())
             return ApiResponseDto<SaleDto>.AsNotFound("Carrinho não encontrado ou vazio.");
-        
+
         await _unitOfWork.BeginTransactionAsync();
 
         try

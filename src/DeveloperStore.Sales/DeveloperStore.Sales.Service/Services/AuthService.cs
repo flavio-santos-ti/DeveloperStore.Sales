@@ -13,13 +13,13 @@ namespace DeveloperStore.Sales.Service.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IConfiguration configuration, IUnitOfWork unitOfWork)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public async Task<ApiResponseDto<AuthResponseDto>> AuthenticateAsync(AuthRequestDto dto)
@@ -27,7 +27,7 @@ public class AuthService : IAuthService
         if (dto == null)
             return ApiResponseDto<AuthResponseDto>.AsBadRequest("Dados de autenticação não podem ser nulos.");
 
-        var user = await _userRepository.GetByUsernameAsync(dto.Username);
+        var user = await _unitOfWork.UserRepository.GetByUsernameAsync(dto.Username);
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return ApiResponseDto<AuthResponseDto>.AsUnauthorized("Usuário ou senha inválidos.");
 

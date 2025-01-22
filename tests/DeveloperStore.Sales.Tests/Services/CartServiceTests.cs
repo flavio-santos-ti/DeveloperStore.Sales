@@ -109,17 +109,14 @@ public class CartServiceTests
             UserId = 1,
             Date = DateTime.UtcNow,
             Products = new List<RequestCartProductDto>
-    {
-        new RequestCartProductDto { ProductId = 1, Quantity = 2 }
-    }
+            {
+                new RequestCartProductDto { ProductId = 1, Quantity = 2 }
+            }
         };
 
-        // Configurando o mock do validator para retornar um ValidationResult válido
         var validationResult = new FluentValidation.Results.ValidationResult();
         _validatorMock.ValidateAsync(requestDto, default).Returns(validationResult);
-
-        // Configurando o mock do CartRepository para retornar null (carrinho não encontrado)
-        _unitOfWorkMock.CartRepository.GetByIdAsync(cartId).Returns(Task.FromResult<Cart>(null));
+        _unitOfWorkMock.CartRepository.GetByIdAsync(cartId).Returns(Task.FromResult<Cart?>(null));
 
         // Act
         var result = await _cartService.UpdateAsync(cartId, requestDto);
@@ -130,13 +127,10 @@ public class CartServiceTests
         result.StatusCode.Should().Be(404);
         result.Message.Should().Be($"Carrinho com ID {cartId} não encontrado.");
 
-        // Verificando que o validator foi chamado corretamente
         await _validatorMock.Received(1).ValidateAsync(requestDto, default);
 
-        // Verificando que o repositório foi chamado para buscar o carrinho
         await _unitOfWorkMock.CartRepository.Received(1).GetByIdAsync(cartId);
 
-        // Garantindo que nenhuma operação adicional foi realizada
         await _unitOfWorkMock.CartProductRepository.DidNotReceiveWithAnyArgs().GetByCartIdAsync(Arg.Any<int>());
         await _unitOfWorkMock.DidNotReceiveWithAnyArgs().BeginTransactionAsync();
         await _unitOfWorkMock.DidNotReceiveWithAnyArgs().CommitAsync();
@@ -184,13 +178,11 @@ public class CartServiceTests
         result.IsSuccess.Should().BeTrue();
         result.StatusCode.Should().Be(200);
 
-        // Validar que o repositório de produtos chamou os métodos corretos
         await _unitOfWorkMock.CartProductRepository.Received(1)
             .DeleteAsync(Arg.Is<CartProduct>(cp => cp.ProductId == 2 && cp.CartId == cartId));
         await _unitOfWorkMock.CartProductRepository.Received(1)
             .AddAsync(Arg.Is<CartProduct>(cp => cp.ProductId == 3 && cp.Quantity == 5 && cp.CartId == cartId));
 
-        // Validar que o carrinho foi atualizado com os produtos corretos
         await _unitOfWorkMock.CartRepository.Received(1)
             .UpdateAsync(Arg.Is<Cart>(c =>
                 c.CartProducts.Count == 2 &&

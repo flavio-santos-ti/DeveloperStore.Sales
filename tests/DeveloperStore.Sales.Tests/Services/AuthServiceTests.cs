@@ -1,27 +1,26 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Auth;
-using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Storage.Interfaces;
 using FluentAssertions;
-using NSubstitute;
 using Microsoft.Extensions.Configuration;
+using NSubstitute;
 
 namespace DeveloperStore.Sales.Tests.Services;
 
 public class AuthServiceTests
 {
-    private readonly IUserRepository _userRepositoryMock;
+    private readonly IUnitOfWork _unitOfWorkMock;
     private readonly IConfiguration _configuration;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
-        _userRepositoryMock = Substitute.For<IUserRepository>();
+        _unitOfWorkMock = Substitute.For<IUnitOfWork>();
 
         var inMemorySettings = new Dictionary<string, string?>
         {
-            { "Jwt:Secret", new string('a', 32) }, 
+            { "Jwt:Secret", new string('a', 32) },
             { "Jwt:Issuer", "testissuer" },
             { "Jwt:Audience", "testaudience" }
         };
@@ -30,7 +29,7 @@ public class AuthServiceTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
 
-        _authService = new AuthService(_userRepositoryMock, _configuration);
+        _authService = new AuthService(_configuration, _unitOfWorkMock);
     }
 
     [Fact]
@@ -47,7 +46,7 @@ public class AuthServiceTests
         result.Message.Should().Be("Dados de autenticação não podem ser nulos.", "a mensagem deve indicar erro de validação");
 
         // Verify
-        await _userRepositoryMock.DidNotReceive().GetByUsernameAsync(Arg.Any<string>());
+        await _unitOfWorkMock.UserRepository.DidNotReceive().GetByUsernameAsync(Arg.Any<string>());
     }
 
     [Fact]
@@ -60,7 +59,7 @@ public class AuthServiceTests
             Password = "wrongpassword"
         };
 
-        _userRepositoryMock.GetByUsernameAsync(requestDto.Username).Returns((User?)null);
+        _unitOfWorkMock.UserRepository.GetByUsernameAsync(requestDto.Username).Returns((User?)null);
 
         // Act
         var result = await _authService.AuthenticateAsync(requestDto);
@@ -73,7 +72,7 @@ public class AuthServiceTests
         result.Message.Should().Be("Usuário ou senha inválidos.", "a mensagem deve indicar erro de autenticação");
 
         // Verify
-        await _userRepositoryMock.Received(1).GetByUsernameAsync(requestDto.Username);
+        await _unitOfWorkMock.UserRepository.Received(1).GetByUsernameAsync(requestDto.Username);
     }
 
     [Fact]
@@ -83,11 +82,11 @@ public class AuthServiceTests
         var invalidConfiguration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-        { "Jwt:Secret", "shortkey" }, 
+                { "Jwt:Secret", "shortkey" },
             })
             .Build();
 
-        var authServiceWithInvalidConfig = new AuthService(_userRepositoryMock, invalidConfiguration);
+        var authServiceWithInvalidConfig = new AuthService(invalidConfiguration, _unitOfWorkMock);
 
         var requestDto = new AuthRequestDto
         {
@@ -102,7 +101,7 @@ public class AuthServiceTests
             Role = "User"
         };
 
-        _userRepositoryMock.GetByUsernameAsync(requestDto.Username).Returns(user);
+        _unitOfWorkMock.UserRepository.GetByUsernameAsync(requestDto.Username).Returns(user);
 
         // Act
         Func<Task> act = async () => await authServiceWithInvalidConfig.AuthenticateAsync(requestDto);
@@ -112,7 +111,7 @@ public class AuthServiceTests
             .WithMessage("A chave JWT deve ter pelo menos 32 caracteres.");
 
         // Verify
-        await _userRepositoryMock.Received(1).GetByUsernameAsync(requestDto.Username);
+        await _unitOfWorkMock.UserRepository.Received(1).GetByUsernameAsync(requestDto.Username);
     }
 
     [Fact]
@@ -132,7 +131,7 @@ public class AuthServiceTests
             Role = "User"
         };
 
-        _userRepositoryMock.GetByUsernameAsync(requestDto.Username).Returns(user);
+        _unitOfWorkMock.UserRepository.GetByUsernameAsync(requestDto.Username).Returns(user);
 
         // Act
         var result = await _authService.AuthenticateAsync(requestDto);
@@ -145,6 +144,6 @@ public class AuthServiceTests
         result.Data.Token.Should().NotBeNullOrWhiteSpace("o token JWT deve ser gerado");
 
         // Verify
-        await _userRepositoryMock.Received(1).GetByUsernameAsync(requestDto.Username);
+        await _unitOfWorkMock.UserRepository.Received(1).GetByUsernameAsync(requestDto.Username);
     }
 }
