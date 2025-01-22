@@ -242,4 +242,154 @@ public class SaleServiceTests
             e.TotalAmount == sale.TotalAmount
         ));
     }
+
+    [Fact]
+    public async Task UpdateSaleAsync_ShouldReturnBadRequest_WhenDtoIsNull()
+    {
+        // Arrange
+        var saleId = 1;
+        RequestSaleDto? dto = null;
+
+        // Act
+        var result = await _saleService.UpdateSaleAsync(saleId, dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(400);
+        result.Message.Should().Be("A venda deve conter pelo menos um item.");
+
+        // Verify
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
+        await _mediatorMock.DidNotReceive().Publish(Arg.Any<SaleModifiedEvent>());
+    }
+
+    [Fact]
+    public async Task UpdateSaleAsync_ShouldReturnNotFound_WhenSaleDoesNotExist()
+    {
+        // Arrange
+        var saleId = 1;
+        var dto = new RequestSaleDto
+        {
+            CustomerId = 1,
+            Branch = "Test Branch",
+            Items = new List<RequestSaleItemDto>
+        {
+            new RequestSaleItemDto { ProductId = 1, Quantity = 5, UnitPrice = 10 }
+        }
+        };
+
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns((Sale)null);
+
+        // Act
+        var result = await _saleService.UpdateSaleAsync(saleId, dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Message.Should().Be("Venda não encontrada.");
+
+        // Verify
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
+        await _mediatorMock.DidNotReceive().Publish(Arg.Any<SaleModifiedEvent>());
+    }
+
+    [Fact]
+    public async Task UpdateSaleAsync_ShouldReturnBadRequest_WhenDtoHasNoItems()
+    {
+        // Arrange
+        var saleId = 1;
+        var dto = new RequestSaleDto
+        {
+            CustomerId = 1,
+            Branch = "Test Branch",
+            Items = new List<RequestSaleItemDto>()
+        };
+
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns(new Sale { Id = saleId });
+
+        // Act
+        var result = await _saleService.UpdateSaleAsync(saleId, dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(400);
+        result.Message.Should().Be("A venda deve conter pelo menos um item.");
+
+        // Verify
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
+        await _mediatorMock.DidNotReceive().Publish(Arg.Any<SaleModifiedEvent>());
+    }
+
+    [Fact]
+    public async Task UpdateSaleAsync_ShouldUpdateSaleAndPublishEvent_WhenDtoIsValid()
+    {
+        // Arrange
+        var saleId = 1;
+        var dto = new RequestSaleDto
+        {
+            CustomerId = 2,
+            Branch = "Updated Branch",
+            Items = new List<RequestSaleItemDto>
+            {
+                new RequestSaleItemDto { ProductId = 1, Quantity = 5, UnitPrice = 20 },
+                new RequestSaleItemDto { ProductId = 2, Quantity = 10, UnitPrice = 15 }
+            }
+        };
+
+        var existingSale = new Sale
+        {
+            Id = saleId,
+            SaleNumber = "12345",
+            SaleDate = DateTime.UtcNow.AddDays(-1),
+            CustomerId = 1,
+            Branch = "Original Branch",
+            TotalAmount = 100,
+            Items = new List<SaleItem>
+            {
+                new SaleItem { ProductId = 1, Quantity = 2, UnitPrice = 10, Discount = 0, TotalAmount = 20 }
+            }
+        };
+
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns(existingSale);
+
+        Sale capturedSale = null;
+        _unitOfWorkMock.SaleRepository
+            .When(x => x.UpdateAsync(Arg.Any<Sale>()))
+            .Do(callInfo => {
+                capturedSale = callInfo.Arg<Sale>();
+            });
+
+        // Act
+        var result = await _saleService.UpdateSaleAsync(saleId, dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(200);
+        result.Message.Should().Be($"Venda {existingSale.SaleNumber} atualizada com sucesso.");
+
+        capturedSale.Should().NotBeNull();
+        Console.WriteLine($"Captured Sale: Branch={capturedSale.Branch}, TotalAmount={capturedSale.TotalAmount}, Items={capturedSale.Items.Count}");
+
+        capturedSale.Branch.Should().Be(dto.Branch);
+        capturedSale.CustomerId.Should().Be(dto.CustomerId);
+        capturedSale.TotalAmount.Should().Be(210);
+        capturedSale.Items.Should().HaveCount(2);
+        capturedSale.Items.Should().ContainSingle(i => i.ProductId == 1 && i.Quantity == 5 && i.TotalAmount == 90);
+        capturedSale.Items.Should().ContainSingle(i => i.ProductId == 2 && i.Quantity == 10 && i.TotalAmount == 120);
+
+
+        await _mediatorMock.Received(1).Publish(Arg.Is<SaleModifiedEvent>(e =>
+            e.SaleId == saleId &&
+            e.SaleNumber == existingSale.SaleNumber &&
+            e.CustomerId == dto.CustomerId &&
+            e.NewTotalAmount == 210
+        ));
+    }
 }
