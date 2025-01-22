@@ -1,7 +1,7 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Sale;
 using System.Diagnostics.CodeAnalysis;
 
-namespace DeveloperStore.Sales.Domain.Dtos.Sarle;
+namespace DeveloperStore.Sales.Domain.Dtos.Sale;
 
 [ExcludeFromCodeCoverage]
 public class SaleDto
