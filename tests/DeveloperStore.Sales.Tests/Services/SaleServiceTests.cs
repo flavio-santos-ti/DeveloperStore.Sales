@@ -392,4 +392,61 @@ public class SaleServiceTests
             e.NewTotalAmount == 210
         ));
     }
+
+    [Fact]
+    public async Task CancelSaleItemAsync_ShouldRemoveItemAndUpdateSale_WhenItemExists()
+    {
+        // Arrange
+        var saleId = 1;
+        var itemId = 2;
+
+        var sale = new Sale
+        {
+            Id = saleId,
+            SaleNumber = "12345",
+            SaleDate = DateTime.UtcNow.AddDays(-1),
+            CustomerId = 1,
+            Branch = "Original Branch",
+            TotalAmount = 200,
+            Items = new List<SaleItem>
+        {
+            new SaleItem { Id = 1, ProductId = 1, Quantity = 2, UnitPrice = 50, Discount = 0, TotalAmount = 100 },
+            new SaleItem { Id = itemId, ProductId = 2, Quantity = 2, UnitPrice = 50, Discount = 0, TotalAmount = 100 }
+        }
+        };
+
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns(sale);
+
+        Sale capturedSale = null;
+        _unitOfWorkMock.SaleRepository
+            .When(x => x.UpdateAsync(Arg.Any<Sale>()))
+            .Do(callInfo => {
+                capturedSale = callInfo.Arg<Sale>();
+            });
+
+        // Act
+        var result = await _saleService.CancelSaleItemAsync(saleId, itemId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(200);
+        result.Message.Should().Be($"Item {itemId} da venda {sale.SaleNumber} foi cancelado com sucesso.");
+
+        capturedSale.Should().NotBeNull();
+        capturedSale.Items.Should().HaveCount(1); 
+        capturedSale.Items.Should().NotContain(i => i.Id == itemId);
+        capturedSale.TotalAmount.Should().Be(100);
+
+        await _mediatorMock.Received(1).Publish(Arg.Is<ItemCancelledEvent>(e =>
+            e.SaleId == saleId &&
+            e.SaleNumber == sale.SaleNumber &&
+            e.ItemId == itemId &&
+            e.ProductId == 2 &&
+            e.Quantity == 2 &&
+            e.UnitPrice == 50 &&
+            e.TotalAmount == 100 &&
+            e.CancelledDate <= DateTime.UtcNow
+        ));
+    }
 }
