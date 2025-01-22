@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DeveloperStore.Sales.Domain.Dtos.Sale;
+using DeveloperStore.Sales.Domain.Events;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Storage.Interfaces;
@@ -155,5 +156,90 @@ public class SaleServiceTests
         // Verify
         await saleRepositoryMock.Received(1).AddAsync(Arg.Any<Sale>());
         await _unitOfWorkMock.Received(1).CommitAsync();
+    }
+
+    [Fact]
+    public async Task CancelSaleAsync_ShouldReturnNotFound_WhenSaleDoesNotExist()
+    {
+        // Arrange
+        var saleId = 1;
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(saleId).Returns((Sale)null);
+
+        // Act
+        var result = await _saleService.CancelSaleAsync(saleId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Message.Should().Be("Venda não encontrada.");
+
+        // Verify
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
+        await _mediatorMock.DidNotReceive().Publish(Arg.Any<SaleCancelledEvent>());
+    }
+
+    [Fact]
+    public async Task CancelSaleAsync_ShouldReturnBadRequest_WhenSaleIsAlreadyCancelled()
+    {
+        // Arrange
+        var sale = new Sale
+        {
+            Id = 1,
+            IsCancelled = true
+        };
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(sale.Id).Returns(sale);
+
+        // Act
+        var result = await _saleService.CancelSaleAsync(sale.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(400);
+        result.Message.Should().Be("Venda já foi cancelada.");
+
+        // Verify
+        await _unitOfWorkMock.DidNotReceive().BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>());
+        await _mediatorMock.DidNotReceive().Publish(Arg.Any<SaleCancelledEvent>());
+    }
+
+    [Fact]
+    public async Task CancelSaleAsync_ShouldCancelSaleAndPublishEvent_WhenSaleIsValid()
+    {
+        // Arrange
+        var sale = new Sale
+        {
+            Id = 1,
+            SaleNumber = "12345",
+            SaleDate = DateTime.UtcNow,
+            CustomerId = 1,
+            TotalAmount = 100,
+            IsCancelled = false
+        };
+        _unitOfWorkMock.SaleRepository.GetByIdAsync(sale.Id).Returns(sale);
+
+        // Act
+        var result = await _saleService.CancelSaleAsync(sale.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(200);
+        result.Message.Should().Be($"Venda {sale.SaleNumber} cancelada com sucesso.");
+
+        // Verify
+        await _unitOfWorkMock.Received(1).BeginTransactionAsync();
+        await _unitOfWorkMock.SaleRepository.Received(1).UpdateAsync(Arg.Is<Sale>(s => s.IsCancelled));
+        await _unitOfWorkMock.Received(1).CommitAsync();
+
+        await _mediatorMock.Received(1).Publish(Arg.Is<SaleCancelledEvent>(e =>
+            e.SaleId == sale.Id &&
+            e.SaleNumber == sale.SaleNumber &&
+            e.CustomerId == sale.CustomerId &&
+            e.TotalAmount == sale.TotalAmount
+        ));
     }
 }
