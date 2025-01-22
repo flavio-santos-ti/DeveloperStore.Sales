@@ -13,15 +13,13 @@ namespace DeveloperStore.Sales.Service.Services;
 
 public class UserService : IUserService
 {
-    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly IValidator<RequestUserDto> _validator;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UserService(IUserRepository userRepository, IMapper mapper, IValidator<RequestUserDto> validator, IUnitOfWork unitOfWork)
+    public UserService(IMapper mapper, IValidator<RequestUserDto> validator, IUnitOfWork unitOfWork)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(userRepository));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(validator));
     }
@@ -35,7 +33,7 @@ public class UserService : IUserService
         if (!validationResult.IsValid)
             return validationResult.ToApiResponse<UserDto>();
 
-        var exists = await _userRepository.ExistsByEmailAsync(dto.Email);
+        var exists = await _unitOfWork.UserRepository.ExistsByEmailAsync(dto.Email);
         if (exists)
             return ApiResponseDto<UserDto>.AsBadRequest("Já existe um usuário com este e-mail.");
 
@@ -45,7 +43,7 @@ public class UserService : IUserService
             var user = _mapper.Map<User>(dto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password); 
 
-            await _userRepository.AddAsync(user);
+            await _unitOfWork.UserRepository.AddAsync(user);
             await _unitOfWork.CommitAsync();
 
             var userDto = _mapper.Map<UserDto>(user);
@@ -67,7 +65,7 @@ public class UserService : IUserService
         if (!validationResult.IsValid)
             return validationResult.ToApiResponse<UserDto>();
 
-        var existingUser = await _userRepository.GetByIdAsync(id);
+        var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(id);
         if (existingUser == null)
             return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");
 
@@ -79,7 +77,7 @@ public class UserService : IUserService
 
             _mapper.Map(dto, existingUser);
 
-            await _userRepository.UpdateAsync(existingUser);
+            await _unitOfWork.UserRepository.UpdateAsync(existingUser);
             await _unitOfWork.CommitAsync();
 
             var updatedUserDto = _mapper.Map<UserDto>(existingUser);
@@ -94,14 +92,14 @@ public class UserService : IUserService
 
     public async Task<ApiResponseDto<UserDto>> DeleteAsync(int id)
     {
-        var existingUser = await _userRepository.GetByIdAsync(id);
+        var existingUser = await _unitOfWork.UserRepository.GetByIdAsync(id);
         if (existingUser == null)
             return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");
 
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            await _userRepository.DeleteAsync(existingUser);
+            await _unitOfWork.UserRepository.DeleteAsync(existingUser);
             await _unitOfWork.CommitAsync();
 
             var userDto = _mapper.Map<UserDto>(existingUser);
@@ -118,7 +116,7 @@ public class UserService : IUserService
     {
         try
         {
-            var query = _userRepository.GetAllQueryable();
+            var query = _unitOfWork.UserRepository.GetAllQueryable();
 
             if (!string.IsNullOrWhiteSpace(order))
             {
@@ -177,7 +175,7 @@ public class UserService : IUserService
 
     public async Task<ApiResponseDto<UserDto>> GetByIdAsync(int id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
 
         if (user == null)
             return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o ID {id} não encontrado.");

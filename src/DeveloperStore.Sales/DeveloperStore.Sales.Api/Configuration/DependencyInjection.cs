@@ -20,12 +20,15 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<ICartProductRepository, CartProductRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
+        services.AddScoped<ISaleItemRepository, SaleItemRepository>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ISaleService, SaleService>();
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+        
         services.AddValidatorsFromAssemblyContaining<RequestProductValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestUserValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestCartValidator>();
