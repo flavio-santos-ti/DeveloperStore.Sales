@@ -436,7 +436,7 @@ public class SaleServiceTests
         capturedSale.Should().NotBeNull();
         capturedSale.Items.Should().HaveCount(1); 
         capturedSale.Items.Should().NotContain(i => i.Id == itemId);
-        capturedSale.TotalAmount.Should().Be(100);
+        capturedSale.TotalAmount.Should().Be(100); 
 
         await _mediatorMock.Received(1).Publish(Arg.Is<ItemCancelledEvent>(e =>
             e.SaleId == saleId &&

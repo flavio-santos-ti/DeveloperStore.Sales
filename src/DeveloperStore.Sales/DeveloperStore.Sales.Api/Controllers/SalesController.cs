@@ -60,4 +60,15 @@ public class SalesController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpPost("checkout/{cartId}")]
+    public async Task<IActionResult> CheckoutCartAsync(int cartId)
+    {
+        var response = await _saleService.CheckoutCartAsync(cartId);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }
