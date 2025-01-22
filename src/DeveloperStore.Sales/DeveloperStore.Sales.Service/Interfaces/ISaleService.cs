@@ -1,6 +1,5 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Dtos.Sale;
-using DeveloperStore.Sales.Domain.Dtos.Sarle;
 
 namespace DeveloperStore.Sales.Service.Interfaces;
 
