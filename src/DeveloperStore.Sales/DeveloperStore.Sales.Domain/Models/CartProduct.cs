@@ -3,9 +3,8 @@
 namespace DeveloperStore.Sales.Domain.Models;
 
 [ExcludeFromCodeCoverage]
-public class CartProduct
+public class CartProduct : BaseEntity
 {
-    public int Id { get; set; }
     public int CartId { get; set; }
     public int ProductId { get; set; }
     public int Quantity { get; set; }
