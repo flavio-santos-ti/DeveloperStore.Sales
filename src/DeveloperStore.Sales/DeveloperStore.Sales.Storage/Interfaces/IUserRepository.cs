@@ -2,13 +2,10 @@
 
 namespace DeveloperStore.Sales.Storage.Interfaces;
 
-public interface IUserRepository
+public interface IUserRepository : IBaseRepository<User>
 {
-    Task AddAsync(User user);
     Task<bool> ExistsByEmailAsync(string email);
     Task<User?> GetByIdAsync(int id);
-    Task UpdateAsync(User user);
-    Task DeleteAsync(User user);
     IQueryable<User> GetAllQueryable();
     Task<User?> GetByUsernameAsync(string username);
 }
