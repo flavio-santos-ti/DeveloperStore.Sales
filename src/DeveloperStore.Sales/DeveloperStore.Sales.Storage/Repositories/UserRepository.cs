@@ -19,6 +19,12 @@ public class UserRepository : IUserRepository
         await _context.Users.AddAsync(user);
     }
 
+    public async Task DeleteAsync(User user)
+    {
+        _context.Users.Remove(user);
+        await Task.CompletedTask;
+    }
+
     public async Task<bool> ExistsByEmailAsync(string email)
     {
         return await _context.Users.AnyAsync(u => u.Email.ToLower() == email.ToLower());
@@ -32,12 +38,6 @@ public class UserRepository : IUserRepository
     public async Task UpdateAsync(User user)
     {
         _context.Users.Update(user);
-        await Task.CompletedTask;
-    }
-
-    public async Task DeleteAsync(User user)
-    {
-        _context.Users.Remove(user);
         await Task.CompletedTask;
     }
 
