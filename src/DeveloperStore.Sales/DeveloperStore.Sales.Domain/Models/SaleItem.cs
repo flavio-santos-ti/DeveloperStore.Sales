@@ -3,9 +3,8 @@
 namespace DeveloperStore.Sales.Domain.Models;
 
 [ExcludeFromCodeCoverage]
-public class SaleItem
+public class SaleItem : BaseEntity
 {
-    public int Id { get; set; }
     public int SaleId { get; set; }
     public int ProductId { get; set; }
     public int Quantity { get; set; }

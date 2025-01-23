@@ -3,9 +3,8 @@
 namespace DeveloperStore.Sales.Domain.Models;
 
 [ExcludeFromCodeCoverage]
-public class Product
+public class Product : BaseEntity
 {
-    public int Id { get; set; } 
     public string Title { get; set; } = string.Empty;
     public decimal Price { get; set; } 
     public string Description { get; set; } = string.Empty;
