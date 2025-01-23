@@ -8,6 +8,7 @@ public interface IUnitOfWork
     ICartProductRepository CartProductRepository { get; }
     ISaleRepository SaleRepository { get; }
     ISaleItemRepository SaleItemRepository { get; }
+    IEventLogRepository EventLogRepository { get; }
 
     Task BeginTransactionAsync();
     Task SaveChangesAsync();
