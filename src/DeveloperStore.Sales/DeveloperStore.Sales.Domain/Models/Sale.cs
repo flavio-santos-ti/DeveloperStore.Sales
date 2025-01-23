@@ -3,9 +3,8 @@
 namespace DeveloperStore.Sales.Domain.Models;
 
 [ExcludeFromCodeCoverage]
-public class Sale
+public class Sale : BaseEntity
 {
-    public int Id { get; set; }
     public string SaleNumber { get; set; } = string.Empty;
     public DateTime SaleDate { get; set; }
     public int CustomerId { get; set; }
