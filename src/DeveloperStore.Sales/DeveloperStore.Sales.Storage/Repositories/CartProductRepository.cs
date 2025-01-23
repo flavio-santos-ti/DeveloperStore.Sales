@@ -5,19 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Storage.Repositories;
 
-public class CartProductRepository : ICartProductRepository
+public class CartProductRepository : BaseRepository<CartProduct>, ICartProductRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public CartProductRepository(ApplicationDbContext context)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-    }
-
-    public async Task AddAsync(CartProduct cartProduct)
-    {
-        await _context.CartProducts.AddAsync(cartProduct);
-    }
+    public CartProductRepository(ApplicationDbContext context) : base(context) { }
 
     public async Task<CartProduct?> GetByIdAsync(int id)
     {
@@ -32,17 +22,5 @@ public class CartProductRepository : ICartProductRepository
             .Where(cp => cp.CartId == cartId)
             .Include(cp => cp.Product)
             .ToListAsync();
-    }
-
-    public async Task DeleteAsync(CartProduct cartProduct)
-    {
-        _context.CartProducts.Remove(cartProduct);
-        await Task.CompletedTask;
-    }
-
-    public async Task UpdateAsync(CartProduct cartProduct)
-    {
-        _context.CartProducts.Update(cartProduct);
-        await Task.CompletedTask;
     }
 }
