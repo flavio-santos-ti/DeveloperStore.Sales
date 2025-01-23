@@ -1,0 +1,19 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: db_developerstore_sales
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mouse
+      POSTGRES_DB: developerstore_sales
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
+    driver: local
