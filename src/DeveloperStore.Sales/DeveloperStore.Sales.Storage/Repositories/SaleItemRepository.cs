@@ -5,18 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Storage.Repositories;
 
-public class SaleItemRepository : ISaleItemRepository
+public class SaleItemRepository : BaseRepository<SaleItem>, ISaleItemRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public SaleItemRepository(ApplicationDbContext context)
+    public SaleItemRepository(ApplicationDbContext context) : base(context)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-    }
-
-    public async Task AddAsync(SaleItem saleItem)
-    {
-        await _context.SaleItems.AddAsync(saleItem);
     }
 
     public async Task<SaleItem?> GetByIdAsync(int id)
@@ -30,17 +22,5 @@ public class SaleItemRepository : ISaleItemRepository
         return await _context.SaleItems
             .Where(si => si.SaleId == saleId)
             .ToListAsync();
-    }
-
-    public async Task UpdateAsync(SaleItem saleItem)
-    {
-        _context.SaleItems.Update(saleItem);
-        await Task.CompletedTask;
-    }
-
-    public async Task DeleteAsync(SaleItem saleItem)
-    {
-        _context.SaleItems.Remove(saleItem);
-        await Task.CompletedTask;
     }
 }
