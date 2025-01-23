@@ -5,24 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Storage.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository : BaseRepository<User>, IUserRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public UserRepository(ApplicationDbContext context)
+    public UserRepository(ApplicationDbContext context) : base(context)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-    }
-
-    public async Task AddAsync(User user)
-    {
-        await _context.Users.AddAsync(user);
-    }
-
-    public async Task DeleteAsync(User user)
-    {
-        _context.Users.Remove(user);
-        await Task.CompletedTask;
     }
 
     public async Task<bool> ExistsByEmailAsync(string email)
@@ -33,12 +19,6 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(int id)
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-    }
-
-    public async Task UpdateAsync(User user)
-    {
-        _context.Users.Update(user);
-        await Task.CompletedTask;
     }
 
     public IQueryable<User> GetAllQueryable()
