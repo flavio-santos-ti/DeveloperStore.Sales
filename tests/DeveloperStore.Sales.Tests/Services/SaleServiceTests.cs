@@ -375,7 +375,6 @@ public class SaleServiceTests
         result.Message.Should().Be($"Venda {existingSale.SaleNumber} atualizada com sucesso.");
 
         capturedSale.Should().NotBeNull();
-        Console.WriteLine($"Captured Sale: Branch={capturedSale.Branch}, TotalAmount={capturedSale.TotalAmount}, Items={capturedSale.Items.Count}");
 
         capturedSale.Branch.Should().Be(dto.Branch);
         capturedSale.CustomerId.Should().Be(dto.CustomerId);
@@ -383,7 +382,6 @@ public class SaleServiceTests
         capturedSale.Items.Should().HaveCount(2);
         capturedSale.Items.Should().ContainSingle(i => i.ProductId == 1 && i.Quantity == 5 && i.TotalAmount == 90);
         capturedSale.Items.Should().ContainSingle(i => i.ProductId == 2 && i.Quantity == 10 && i.TotalAmount == 120);
-
 
         await _mediatorMock.Received(1).Publish(Arg.Is<SaleModifiedEvent>(e =>
             e.SaleId == saleId &&

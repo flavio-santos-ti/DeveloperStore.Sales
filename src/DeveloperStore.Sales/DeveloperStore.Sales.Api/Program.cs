@@ -1,4 +1,6 @@
 using DeveloperStore.Sales.Api.Configuration;
+using DeveloperStore.Sales.Domain.Models;
+using MongoDB.Bson.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddDependencyInjection();
 builder.Services.AddJwtAuthentication(builder.Configuration);
+
+BsonClassMap.RegisterClassMap<EventLog>(cm =>
+{
+    cm.AutoMap(); // Mapeia automaticamente as propriedades da classe
+    cm.SetIgnoreExtraElements(true); // Ignorar elementos extras
+});
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
