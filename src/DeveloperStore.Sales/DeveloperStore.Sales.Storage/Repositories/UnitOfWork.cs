@@ -14,10 +14,13 @@ public class UnitOfWork : IUnitOfWork
     private ICartProductRepository? _cartProductRepository;
     private ISaleRepository? _saleRepository;
     private ISaleItemRepository? _saleItemRepository;
+    private readonly IMongoDbContext _mongoDbContext;
+    private IEventLogRepository? _eventLogRepository;
 
-    public UnitOfWork(ApplicationDbContext context)
+    public UnitOfWork(ApplicationDbContext context, IMongoDbContext mongoDbContext)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _mongoDbContext = mongoDbContext ?? throw new ArgumentNullException(nameof(mongoDbContext));
     }
 
     public IProductRepository ProductRepository => _productRepository ??= new ProductRepository(_context);
@@ -26,7 +29,7 @@ public class UnitOfWork : IUnitOfWork
     public ICartProductRepository CartProductRepository => _cartProductRepository ??= new CartProductRepository(_context);
     public ISaleRepository SaleRepository => _saleRepository ??= new SaleRepository(_context);
     public ISaleItemRepository SaleItemRepository => _saleItemRepository ??= new SaleItemRepository(_context);
-
+    public IEventLogRepository EventLogRepository => _eventLogRepository ??= new EventLogRepository(_mongoDbContext);
 
     public async Task BeginTransactionAsync()
     {

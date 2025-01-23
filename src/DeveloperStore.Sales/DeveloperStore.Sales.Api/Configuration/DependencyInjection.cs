@@ -2,6 +2,8 @@
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Service.Validations;
+using DeveloperStore.Sales.Storage.Contexts;
+using DeveloperStore.Sales.Storage.EventLogging;
 using DeveloperStore.Sales.Storage.Interfaces;
 using DeveloperStore.Sales.Storage.Repositories;
 using FluentValidation;
@@ -16,6 +18,8 @@ public static class DependencyInjection
     public static IServiceCollection AddDependencyInjection(this IServiceCollection services)
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IMongoDbContext, MongoDbContext>();
+        services.AddScoped<IEventLogRepository, EventLogRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
@@ -27,17 +31,19 @@ public static class DependencyInjection
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ISaleService, SaleService>();
+
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-        
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+
         services.AddValidatorsFromAssemblyContaining<RequestProductValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestUserValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestCartValidator>();
         services.AddValidatorsFromAssemblyContaining<RequestCartProductValidator>();
         
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleCreatedEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ItemCancelledEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleCancelledEvent).Assembly));
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleCreatedEvent).Assembly));
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SaleModifiedEvent).Assembly));
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ItemCancelledEvent).Assembly));
 
         return services;
     }
