@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace DeveloperStore.Sales.Storage.EventLogging;
+namespace DeveloperStore.Sales.Storage.NoSQL.MongoDb.Entities;
 
 public class EventLog
 {

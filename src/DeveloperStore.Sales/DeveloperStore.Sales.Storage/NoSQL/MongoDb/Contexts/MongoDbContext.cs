@@ -1,8 +1,8 @@
-﻿using DeveloperStore.Sales.Storage.Interfaces;
+﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 
-namespace DeveloperStore.Sales.Storage.Contexts;
+namespace DeveloperStore.Sales.Storage.NoSQL.MongoDb.Contexts;
 
 public class MongoDbContext : IMongoDbContext
 {

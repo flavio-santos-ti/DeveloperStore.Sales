@@ -1,9 +1,9 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace DeveloperStore.Sales.Storage.Mappings
+namespace DeveloperStore.Sales.Storage.NoSQL.MongoDb.Mappings
 {
-    public class EventLogMap
+    public class EventLogMongoDbMap
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]

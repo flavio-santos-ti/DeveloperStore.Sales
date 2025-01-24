@@ -1,4 +1,6 @@
-﻿namespace DeveloperStore.Sales.Storage.Interfaces;
+﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
+
+namespace DeveloperStore.Sales.Storage.Interfaces;
 
 public interface IUnitOfWork
 {
@@ -8,7 +10,7 @@ public interface IUnitOfWork
     ICartProductRepository CartProductRepository { get; }
     ISaleRepository SaleRepository { get; }
     ISaleItemRepository SaleItemRepository { get; }
-    IEventLogRepository EventLogRepository { get; }
+    IEventLogMongoDbRepository EventLogRepository { get; }
 
     Task BeginTransactionAsync();
     Task SaveChangesAsync();
