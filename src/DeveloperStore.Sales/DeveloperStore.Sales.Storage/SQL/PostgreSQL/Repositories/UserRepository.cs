@@ -1,5 +1,4 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +6,7 @@ namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class UserRepository : BaseRepository<User>, IUserRepository
 {
-    public UserRepository(PostgreSqlDbContext context) : base(context)
-    {
-    }
+    public UserRepository(IPostgreSqlDbContext context) : base(context) { }
 
     public async Task<bool> ExistsByEmailAsync(string email)
     {

@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using DeveloperStore.Sales.Service.Interfaces;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.UnitOfWork;
 
 namespace DeveloperStore.Sales.Service.Services;
 

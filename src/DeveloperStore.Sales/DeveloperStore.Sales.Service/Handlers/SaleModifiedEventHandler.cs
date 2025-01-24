@@ -1,5 +1,5 @@
 ﻿using DeveloperStore.Sales.Domain.Events;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.UnitOfWork;
 using MediatR;
 
 namespace DeveloperStore.Sales.Service.Handlers;

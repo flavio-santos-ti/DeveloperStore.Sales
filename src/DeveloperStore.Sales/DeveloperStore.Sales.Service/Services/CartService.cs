@@ -5,7 +5,7 @@ using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Extensions;
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Extensions;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.UnitOfWork;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,4 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +6,7 @@ namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class SaleItemRepository : BaseRepository<SaleItem>, ISaleItemRepository
 {
-    public SaleItemRepository(PostgreSqlDbContext context) : base(context)
-    {
-    }
+    public SaleItemRepository(IPostgreSqlDbContext context) : base(context) { }
 
     public async Task<SaleItem?> GetByIdAsync(int id)
     {

@@ -1,6 +1,7 @@
 ﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
-namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+namespace DeveloperStore.Sales.Storage.UnitOfWork;
 
 public interface IUnitOfWork
 {

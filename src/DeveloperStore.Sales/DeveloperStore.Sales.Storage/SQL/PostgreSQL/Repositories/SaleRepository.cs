@@ -7,7 +7,7 @@ namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class SaleRepository : BaseRepository<Sale>, ISaleRepository
 {
-    public SaleRepository(PostgreSqlDbContext context) : base(context)
+    public SaleRepository(IPostgreSqlDbContext context) : base(context)
     {
     }
 
