@@ -1,8 +1,8 @@
 ﻿using MediatR;
 
-namespace DeveloperStore.Sales.Storage.Interfaces
+namespace DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces
 {
-    public interface IEventLogRepository
+    public interface IEventLogMongoDbRepository
     {
         /// <summary>
         /// Registra um evento na coleção de logs.

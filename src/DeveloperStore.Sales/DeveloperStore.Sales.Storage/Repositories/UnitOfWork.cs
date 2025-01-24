@@ -1,5 +1,7 @@
 ﻿using DeveloperStore.Sales.Storage.Contexts;
 using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
+using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DeveloperStore.Sales.Storage.Repositories;
@@ -15,7 +17,7 @@ public class UnitOfWork : IUnitOfWork
     private ISaleRepository? _saleRepository;
     private ISaleItemRepository? _saleItemRepository;
     private readonly IMongoDbContext _mongoDbContext;
-    private IEventLogRepository? _eventLogRepository;
+    private IEventLogMongoDbRepository? _eventLogRepository;
 
     public UnitOfWork(ApplicationDbContext context, IMongoDbContext mongoDbContext)
     {
@@ -29,7 +31,7 @@ public class UnitOfWork : IUnitOfWork
     public ICartProductRepository CartProductRepository => _cartProductRepository ??= new CartProductRepository(_context);
     public ISaleRepository SaleRepository => _saleRepository ??= new SaleRepository(_context);
     public ISaleItemRepository SaleItemRepository => _saleItemRepository ??= new SaleItemRepository(_context);
-    public IEventLogRepository EventLogRepository => _eventLogRepository ??= new EventLogRepository(_mongoDbContext);
+    public IEventLogMongoDbRepository EventLogRepository => _eventLogRepository ??= new EventLogMongoDbRepository(_mongoDbContext);
 
     public async Task BeginTransactionAsync()
     {
