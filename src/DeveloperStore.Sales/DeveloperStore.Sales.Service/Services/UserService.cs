@@ -4,10 +4,10 @@ using DeveloperStore.Sales.Domain.Dtos.User;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Extensions;
 using DeveloperStore.Sales.Service.Interfaces;
-using DeveloperStore.Sales.Storage.Interfaces;
 using FluentValidation;
-using DeveloperStore.Sales.Storage.Extensions;
 using Microsoft.EntityFrameworkCore;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Extensions;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
 namespace DeveloperStore.Sales.Service.Services;
 

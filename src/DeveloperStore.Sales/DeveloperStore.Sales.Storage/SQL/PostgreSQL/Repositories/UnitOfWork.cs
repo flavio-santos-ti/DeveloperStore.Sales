@@ -1,14 +1,14 @@
-﻿using DeveloperStore.Sales.Storage.Contexts;
-using DeveloperStore.Sales.Storage.Interfaces;
-using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
+﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace DeveloperStore.Sales.Storage.Repositories;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly ApplicationDbContext _context;
+    private readonly PostgreSqlDbContext _context;
     private IDbContextTransaction? _transaction;
     private IProductRepository? _productRepository;
     private IUserRepository? _userRepository;
@@ -19,7 +19,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IMongoDbContext _mongoDbContext;
     private IEventLogMongoDbRepository? _eventLogRepository;
 
-    public UnitOfWork(ApplicationDbContext context, IMongoDbContext mongoDbContext)
+    public UnitOfWork(PostgreSqlDbContext context, IMongoDbContext mongoDbContext)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _mongoDbContext = mongoDbContext ?? throw new ArgumentNullException(nameof(mongoDbContext));
@@ -51,8 +51,8 @@ public class UnitOfWork : IUnitOfWork
     {
         if (_transaction != null)
         {
-            await _transaction.RollbackAsync(); 
-            await _transaction.DisposeAsync(); 
+            await _transaction.RollbackAsync();
+            await _transaction.DisposeAsync();
             _transaction = null;
         }
     }
@@ -61,17 +61,17 @@ public class UnitOfWork : IUnitOfWork
     {
         try
         {
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
             if (_transaction != null)
             {
-                await _transaction.CommitAsync(); 
-                await _transaction.DisposeAsync(); 
+                await _transaction.CommitAsync();
+                await _transaction.DisposeAsync();
                 _transaction = null;
             }
         }
         catch
         {
-            await RollbackAsync(); 
+            await RollbackAsync();
             throw;
         }
     }

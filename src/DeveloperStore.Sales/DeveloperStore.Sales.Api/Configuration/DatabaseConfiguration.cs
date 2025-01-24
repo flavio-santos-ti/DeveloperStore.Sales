@@ -1,4 +1,4 @@
-﻿using DeveloperStore.Sales.Storage.Contexts;
+﻿using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Api.Configuration;
@@ -9,7 +9,7 @@ public static class DatabaseConfiguration
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<PostgreSqlDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         return services;

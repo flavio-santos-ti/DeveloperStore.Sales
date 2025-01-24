@@ -1,13 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Dtos.Auth;
 using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using DeveloperStore.Sales.Service.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
 namespace DeveloperStore.Sales.Service.Services;
 

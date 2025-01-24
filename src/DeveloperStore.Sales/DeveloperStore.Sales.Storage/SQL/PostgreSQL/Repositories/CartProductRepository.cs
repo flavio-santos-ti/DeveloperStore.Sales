@@ -1,13 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.Contexts;
-using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace DeveloperStore.Sales.Storage.Repositories;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class CartProductRepository : BaseRepository<CartProduct>, ICartProductRepository
 {
-    public CartProductRepository(ApplicationDbContext context) : base(context) { }
+    public CartProductRepository(PostgreSqlDbContext context) : base(context) { }
 
     public async Task<CartProduct?> GetByIdAsync(int id)
     {

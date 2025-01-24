@@ -4,7 +4,7 @@ using DeveloperStore.Sales.Domain.Dtos.Sale;
 using DeveloperStore.Sales.Domain.Events;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Interfaces;
-using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using MediatR;
 
 namespace DeveloperStore.Sales.Service.Services;

@@ -1,6 +1,6 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
 
-namespace DeveloperStore.Sales.Storage.Interfaces;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
 public interface IUserRepository : IBaseRepository<User>
 {
