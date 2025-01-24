@@ -1,4 +1,5 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Mappings;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
@@ -6,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 
 [ExcludeFromCodeCoverage]
-public class PostgreSqlDbContext : DbContext
+public class PostgreSqlDbContext : DbContext, IPostgreSqlDbContext
 {
     public PostgreSqlDbContext(DbContextOptions options) : base(options)
     {

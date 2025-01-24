@@ -1,11 +1,10 @@
-﻿using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+﻿using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
 public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
 {
-    protected readonly PostgreSqlDbContext _context;
+    protected readonly IPostgreSqlDbContext _context;
 
-    protected BaseRepository(PostgreSqlDbContext context)
+    protected BaseRepository(IPostgreSqlDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

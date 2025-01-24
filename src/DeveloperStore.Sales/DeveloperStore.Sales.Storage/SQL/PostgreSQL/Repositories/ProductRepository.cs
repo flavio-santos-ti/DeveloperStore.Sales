@@ -1,5 +1,4 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,7 @@ namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class ProductRepository : BaseRepository<Product>, IProductRepository
 {
-    public ProductRepository(PostgreSqlDbContext context) : base(context) { }
+    public ProductRepository(IPostgreSqlDbContext context) : base(context) { }
 
     public async Task<bool> ExistsByTitleAsync(string title)
     {

@@ -2,7 +2,7 @@
 using DeveloperStore.Sales.Domain.Dtos.Cart;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.UnitOfWork;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
