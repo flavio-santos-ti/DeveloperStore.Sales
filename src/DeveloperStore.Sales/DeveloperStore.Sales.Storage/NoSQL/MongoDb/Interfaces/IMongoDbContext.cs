@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DeveloperStore.Sales.Storage.Interfaces;
+namespace DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 
 public interface IMongoDbContext
 {

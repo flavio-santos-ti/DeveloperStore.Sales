@@ -2,9 +2,10 @@
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Service.Validations;
-using DeveloperStore.Sales.Storage.Contexts;
-using DeveloperStore.Sales.Storage.EventLogging;
 using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Contexts;
+using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
+using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
 using DeveloperStore.Sales.Storage.Repositories;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,7 +20,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IMongoDbContext, MongoDbContext>();
-        services.AddScoped<IEventLogRepository, EventLogRepository>();
+        services.AddScoped<IEventLogMongoDbRepository, EventLogMongoDbRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
