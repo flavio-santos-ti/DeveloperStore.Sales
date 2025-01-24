@@ -1,14 +1,14 @@
 ﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
+namespace DeveloperStore.Sales.Storage.UnitOfWork;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly PostgreSqlDbContext _context;
+    private readonly IPostgreSqlDbContext _context;
     private IDbContextTransaction? _transaction;
     private IProductRepository? _productRepository;
     private IUserRepository? _userRepository;
@@ -19,7 +19,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IMongoDbContext _mongoDbContext;
     private IEventLogMongoDbRepository? _eventLogRepository;
 
-    public UnitOfWork(PostgreSqlDbContext context, IMongoDbContext mongoDbContext)
+    public UnitOfWork(IPostgreSqlDbContext context, IMongoDbContext mongoDbContext)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _mongoDbContext = mongoDbContext ?? throw new ArgumentNullException(nameof(mongoDbContext));

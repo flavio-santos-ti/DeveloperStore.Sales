@@ -4,6 +4,7 @@ using DeveloperStore.Sales.Domain.Events;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.UnitOfWork;
 using FluentAssertions;
 using MediatR;
 using NSubstitute;

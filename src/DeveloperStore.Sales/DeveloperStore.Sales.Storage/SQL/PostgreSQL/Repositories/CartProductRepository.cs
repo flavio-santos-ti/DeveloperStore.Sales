@@ -7,7 +7,7 @@ namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class CartProductRepository : BaseRepository<CartProduct>, ICartProductRepository
 {
-    public CartProductRepository(PostgreSqlDbContext context) : base(context) { }
+    public CartProductRepository(IPostgreSqlDbContext context) : base(context) { }
 
     public async Task<CartProduct?> GetByIdAsync(int id)
     {
