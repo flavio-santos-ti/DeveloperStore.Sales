@@ -2,11 +2,11 @@
 using DeveloperStore.Sales.Service.Interfaces;
 using DeveloperStore.Sales.Service.Services;
 using DeveloperStore.Sales.Service.Validations;
-using DeveloperStore.Sales.Storage.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Contexts;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
-using DeveloperStore.Sales.Storage.Repositories;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;

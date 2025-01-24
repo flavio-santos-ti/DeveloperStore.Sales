@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace DeveloperStore.Sales.Storage.Extensions;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Extensions;
 
 [ExcludeFromCodeCoverage]
 public static class IQueryableExtensions
