@@ -1,14 +1,14 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.Mappings;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Mappings;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
 
-namespace DeveloperStore.Sales.Storage.Contexts;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 
 [ExcludeFromCodeCoverage]
-public class ApplicationDbContext : DbContext
+public class PostgreSqlDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions options) : base(options)
+    public PostgreSqlDbContext(DbContextOptions options) : base(options)
     {
     }
     public DbSet<Product> Products { get; set; }

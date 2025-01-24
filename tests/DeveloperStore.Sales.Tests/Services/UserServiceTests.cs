@@ -3,7 +3,7 @@ using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Dtos.User;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
-using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using FluentAssertions;
 using FluentValidation;
 using NSubstitute;

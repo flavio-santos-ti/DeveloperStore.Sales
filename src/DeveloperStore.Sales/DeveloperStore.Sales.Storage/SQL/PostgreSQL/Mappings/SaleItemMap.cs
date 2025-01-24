@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Diagnostics.CodeAnalysis;
 
-namespace DeveloperStore.Sales.Storage.Mappings;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Mappings;
 
 [ExcludeFromCodeCoverage]
 public class SaleItemMap : IEntityTypeConfiguration<SaleItem>

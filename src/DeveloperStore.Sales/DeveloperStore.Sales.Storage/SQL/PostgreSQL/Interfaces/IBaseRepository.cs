@@ -1,4 +1,4 @@
-﻿namespace DeveloperStore.Sales.Storage.Interfaces;
+﻿namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 
 public interface IBaseRepository<T> where T : class
 {

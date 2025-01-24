@@ -1,13 +1,13 @@
 ﻿using DeveloperStore.Sales.Domain.Models;
-using DeveloperStore.Sales.Storage.Contexts;
-using DeveloperStore.Sales.Storage.Interfaces;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace DeveloperStore.Sales.Storage.Repositories;
+namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
 public class SaleItemRepository : BaseRepository<SaleItem>, ISaleItemRepository
 {
-    public SaleItemRepository(ApplicationDbContext context) : base(context)
+    public SaleItemRepository(PostgreSqlDbContext context) : base(context)
     {
     }
 
