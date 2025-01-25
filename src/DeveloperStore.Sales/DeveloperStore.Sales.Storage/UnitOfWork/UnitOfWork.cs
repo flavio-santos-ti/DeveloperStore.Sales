@@ -1,5 +1,6 @@
 ﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
+using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -25,6 +26,7 @@ public class UnitOfWork : IUnitOfWork
         _mongoDbContext = mongoDbContext ?? throw new ArgumentNullException(nameof(mongoDbContext));
     }
 
+    public IPostgreSqlDbContext Context =>_context;
     public IProductRepository ProductRepository => _productRepository ??= new ProductRepository(_context);
     public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
     public ICartRepository CartRepository => _cartRepository ??= new CartRepository(_context);

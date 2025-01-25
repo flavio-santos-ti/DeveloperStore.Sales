@@ -19,10 +19,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDependencyInjection(this IServiceCollection services)
     {
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IMongoDbContext, MongoDbContext>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         services.AddScoped<IEventLogMongoDbRepository, EventLogMongoDbRepository>();
-        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<ICartProductRepository, CartProductRepository>();
