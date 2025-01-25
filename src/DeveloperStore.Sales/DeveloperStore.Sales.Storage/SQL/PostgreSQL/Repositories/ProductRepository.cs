@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 
-internal class ProductRepository : BaseRepository<Product>, IProductRepository
+public class ProductRepository : BaseRepository<Product>, IProductRepository
 {
     public ProductRepository(IPostgreSqlDbContext context) : base(context) { }
 

@@ -23,7 +23,6 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IEventLogMongoDbRepository, EventLogMongoDbRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<ICartProductRepository, CartProductRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
