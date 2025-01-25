@@ -26,7 +26,7 @@ public class UnitOfWork : IUnitOfWork
         _mongoDbContext = mongoDbContext ?? throw new ArgumentNullException(nameof(mongoDbContext));
     }
 
-    public IPostgreSqlDbContext Context =>_context;
+    public IPostgreSqlDbContext Context => _context;
     public IProductRepository ProductRepository => _productRepository ??= new ProductRepository(_context);
     public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
     public ICartRepository CartRepository => _cartRepository ??= new CartRepository(_context);
