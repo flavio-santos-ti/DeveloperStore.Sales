@@ -10,6 +10,7 @@ builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddDependencyInjection();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
+
 BsonClassMap.RegisterClassMap<EventLog>(cm =>
 {
     cm.AutoMap(); // Mapeia automaticamente as propriedades da classe
@@ -22,6 +23,28 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowAngular", policy =>
+//    {
+//        policy.AllowAnyOrigin()
+//              .AllowAnyHeader()
+//              .AllowAnyMethod();
+
+//    });
+//});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -31,7 +54,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAngular");
+
 app.UseHttpsRedirection();
+
+
 app.UseAuthentication();
 app.UseAuthorization();
 
