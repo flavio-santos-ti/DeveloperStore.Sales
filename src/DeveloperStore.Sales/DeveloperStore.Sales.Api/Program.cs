@@ -13,8 +13,8 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 
 BsonClassMap.RegisterClassMap<EventLog>(cm =>
 {
-    cm.AutoMap(); // Mapeia automaticamente as propriedades da classe
-    cm.SetIgnoreExtraElements(true); // Ignorar elementos extras
+    cm.AutoMap(); 
+    cm.SetIgnoreExtraElements(true);
 });
 
 
@@ -22,17 +22,6 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowAngular", policy =>
-//    {
-//        policy.AllowAnyOrigin()
-//              .AllowAnyHeader()
-//              .AllowAnyMethod();
-
-//    });
-//});
 
 builder.Services.AddCors(options =>
 {
@@ -57,7 +46,6 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAngular");
 
 app.UseHttpsRedirection();
-
 
 app.UseAuthentication();
 app.UseAuthorization();
