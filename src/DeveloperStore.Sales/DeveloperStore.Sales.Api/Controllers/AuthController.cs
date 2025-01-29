@@ -17,7 +17,6 @@ public class AuthController : ControllerBase
         _authService = authService ?? throw new ArgumentNullException(nameof(authService));
     }
 
-    [HttpOptions]
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> LoginAsync([FromBody] AuthRequestDto dto)
