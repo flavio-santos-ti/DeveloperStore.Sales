@@ -18,13 +18,13 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
     }
 
+    public async Task<User?> GetByUsernameAsync(string userName)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Username == userName);
+    }
+
     public IQueryable<User> GetAllQueryable()
     {
         return _context.Users.AsQueryable();
-    }
-
-    public async Task<User?> GetByUsernameAsync(string username)
-    {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
     }
 }

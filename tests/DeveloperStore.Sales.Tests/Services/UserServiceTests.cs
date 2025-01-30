@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using DeveloperStore.Sales.Domain.Dtos.Response;
 using DeveloperStore.Sales.Domain.Dtos.User;
 using DeveloperStore.Sales.Domain.Models;
 using DeveloperStore.Sales.Service.Services;
@@ -214,5 +213,86 @@ public class UserServiceTests
         await _unitOfWorkMock.UserRepository.Received(1).DeleteAsync(existingUser);
         await _unitOfWorkMock.Received(1).BeginTransactionAsync();
         await _unitOfWorkMock.Received(1).CommitAsync();
+    }
+
+    [Fact]
+    public async Task GetByUsernameAsync_ShouldReturnSuccess_WhenUserExists()
+    {
+        // Arrange
+        var username = "johndoe";
+        var existingUser = new User
+        {
+            Id = 1,
+            Email = "johndoe@example.com",
+            Username = username,
+            Firstname = "John",
+            Lastname = "Doe",
+            City = "New York",
+            Street = "Main Street",
+            AddressNumber = 123,
+            Zipcode = "10001",
+            GeolocationLat = "40.7128",
+            GeolocationLong = "-74.0060",
+            Phone = "123456789",
+            Status = "Active",
+            Role = "Customer",
+            PasswordHash = "hashedpassword"
+        };
+
+        _unitOfWorkMock.UserRepository.GetByUsernameAsync(existingUser.Username).Returns(existingUser);
+
+        _mapperMock.Map<UserDto>(existingUser).Returns(new UserDto
+        {
+            Email = existingUser.Email,
+            Username = existingUser.Username,
+            Name = new NameDto { Firstname = existingUser.Firstname, Lastname = existingUser.Lastname },
+            Address = new AddressDto
+            {
+                City = existingUser.City,
+                Street = existingUser.Street,
+                Number = existingUser.AddressNumber,
+                Zipcode = existingUser.Zipcode,
+                Geolocation = new GeolocationDto { Lat = existingUser.GeolocationLat, Long = existingUser.GeolocationLong }
+            },
+            Phone = existingUser.Phone,
+            Status = existingUser.Status,
+            Role = existingUser.Role
+        });
+
+        // Act
+        var result = await _userService.GetByUsernameAsync(username);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.StatusCode.Should().Be(200);
+        result.Data.Should().NotBeNull();
+        result.Data.Username.Should().Be(username);
+
+        // Verify
+        await _unitOfWorkMock.UserRepository.Received(1).GetByUsernameAsync(username);
+        _mapperMock.Received(1).Map<UserDto>(existingUser);
+    }
+
+    [Fact]
+    public async Task GetByUsernameAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var username = "nonexistentuser";
+
+        _unitOfWorkMock.UserRepository.GetByUsernameAsync(username).Returns((User?)null);
+
+        // Act
+        var result = await _userService.GetByUsernameAsync(username);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Message.Should().Be($"Usuário com o UserName {username} não encontrado.");
+
+        // Verify
+        await _unitOfWorkMock.UserRepository.Received(1).GetByUsernameAsync(username);
+        _mapperMock.DidNotReceive().Map<UserDto>(Arg.Any<User>());
     }
 }

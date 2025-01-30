@@ -184,4 +184,16 @@ public class UserService : IUserService
 
         return ApiResponseDto<UserDto>.AsSuccess(userDto);
     }
+
+    public async Task<ApiResponseDto<UserDto>> GetByUsernameAsync(string username)
+    {
+        var user = await _unitOfWork.UserRepository.GetByUsernameAsync(username);
+
+        if (user == null)
+            return ApiResponseDto<UserDto>.AsNotFound($"Usuário com o UserName {username} não encontrado.");
+
+        var userDto = _mapper.Map<UserDto>(user);
+
+        return ApiResponseDto<UserDto>.AsSuccess(userDto);
+    }
 }

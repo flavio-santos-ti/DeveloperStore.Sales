@@ -72,4 +72,15 @@ public class UsersController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpGet("by-username/{username}")]
+    public async Task<IActionResult> GetByUsernameAsync(string username)
+    {
+        var response = await _userService.GetByUsernameAsync(username);
+
+        if (response.IsSuccess)
+            return StatusCode(response.StatusCode, response.Data);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }
