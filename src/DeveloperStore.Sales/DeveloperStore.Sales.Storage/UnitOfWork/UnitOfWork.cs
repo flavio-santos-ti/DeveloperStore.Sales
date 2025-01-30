@@ -1,6 +1,5 @@
 ﻿using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Interfaces;
 using DeveloperStore.Sales.Storage.NoSQL.MongoDb.Repositories;
-using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Contexts;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Interfaces;
 using DeveloperStore.Sales.Storage.SQL.PostgreSQL.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
