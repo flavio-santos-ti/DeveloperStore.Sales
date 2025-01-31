@@ -10,13 +10,11 @@ builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddDependencyInjection();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-
 BsonClassMap.RegisterClassMap<EventLog>(cm =>
 {
     cm.AutoMap(); 
     cm.SetIgnoreExtraElements(true);
 });
-
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,12 +23,11 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
-
     });
 });
 
@@ -43,11 +40,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAngular");
-
-app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
+
+// Custom middleware to capture 401 errors.
+app.Use(async (context, next) =>
+{
+    await next.Invoke();
+
+    if (context.Response.StatusCode == 401)
+    {
+        Console.WriteLine("Unauthorized request: " + context.Request.Path);
+    }
+
+    if (context.Request.Headers.ContainsKey("Authorization"))
+    {
+        var token = context.Request.Headers["Authorization"].ToString();
+        Console.WriteLine("Token recebido (depois do next): " + token);
+    }
+    else
+    {
+        Console.WriteLine("Token não encontrado no cabeçalho Authorization (depois do next)");
+    }
+});
+
 app.UseAuthorization();
 
 app.MapControllers();
